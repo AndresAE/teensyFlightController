@@ -1,0 +1,13 @@
+[ekf]
+accel_noise = 0.5
+gps_pos_noise = 3.0
+gps_vel_noise = 0.5
+initial_covariance = 1.0
+
+[imu]
+i2c_address = 0x68
+scale_factor = 16384.0
+
+[gps]
+baud_rate = 9600
+update_rate_hz = 5

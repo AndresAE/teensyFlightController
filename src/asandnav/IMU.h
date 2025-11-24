@@ -1,0 +1,89 @@
+#include <cmath>
+#include <Arduino.h>
+#include "Common.h"
+
+class IMU {
+public:
+  int imu_baud = 115200;
+  int boot_time_ms = 2000;
+  int nInit = 10; 
+  double accel_LSB = 0.00981;
+  double gyro_LSB = 0.0625;
+
+  double gyroX_offset_dps = 0.0, gyroY_offset_dps = 0.0, gyroZ_offset_dps = 0.0;
+  double accelMagnitudeScaling = 1.0;
+
+  double cutoffAx_Hz = 10, cutoffAy_Hz = 10, cutoffAz_Hz = 10;
+  double cutoffGx_Hz = 10, cutoffGy_Hz = 10, cutoffGz_Hz = 10;
+
+  double xRot_d=180.0;
+  double yRot_d=0.0;
+  double zRot_d=0.0;
+
+  int sampleRate_Hz;
+  double yaw0_d, _dt_s;
+  IMU(int sampleRate_Hz=100, double yaw0_d=0.0);
+
+  void begin();
+  void step();
+  void processStatesRaw();
+  void writeRegister(uint8_t reg, uint8_t value);
+  void readVector(uint8_t startReg, int16_t &xVector, int16_t &yVector, int16_t &zVector);
+  void initializeRotMatrix();
+  void rotateRaw();
+  
+  struct busStates {
+    double angularRateX_dps;
+    double angularRateY_dps;
+    double angularRateZ_dps;
+    double specificForceX_fps2;
+    double specificForceY_fps2;
+    double specificForceZ_fps2;
+  };
+
+  struct busEuler {
+    double roll_d;
+    double pitch_d;
+    double yaw_d;
+  };
+
+  struct busEulerRates {
+    double phiDot_dps;
+    double thetaDot_dps;
+    double psiDot_dps;
+  };
+
+  struct busIMU {
+    busStates states;
+    busEuler euler;
+  };
+
+    busEulerRates m_eulerRate, m_eulerRatePrev;
+    busStates m_States = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
+    busEuler m_Euler = {0, 0, yaw0_d};
+    busIMU m_IMU = {m_States, m_Euler};
+
+private:
+  Common C;
+
+  #define BNO055_ADDRESS          0x28
+  #define BNO055_OPR_MODE         0x3D
+  #define BNO055_PWR_MODE         0x3E
+  #define BNO055_PAGE_ID          0x07
+  #define BNO055_ACCEL_DATA_X_LSB 0x08
+  #define BNO055_GYRO_DATA_X_LSB  0x14 
+
+  double _gyroX_offset_dps = 0.0, _gyroY_offset_dps = 0.0, _gyroZ_offset_dps = 0.0;
+  double _accelMagnitudeScaling = 0.0;
+
+  int16_t ax_raw, ay_raw, az_raw;
+  int16_t gx_raw, gy_raw, gz_raw;
+
+  double axPrev_fps2 = 0.0, ayPrev_fps2 = 0.0, azPrev_fps2 = 0.0;
+  double gxPrev_dps = 0.0, gyPrev_dps = 0.0, gzPrev_dps = 0.0;
+
+  double alphaAx, alphaAy, alphaAz;
+  double alphaGx, alphaGy, alphaGz;
+
+  double cX, sX, cY, sY, cZ, sZ;
+};
