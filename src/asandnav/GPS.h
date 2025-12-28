@@ -6,6 +6,15 @@ class GPS {
 public:
   GPS();
 
+  int gps_baud = 9600;
+  int boot_time_ms = 2000;
+  double n_ft;
+
+  // public methods
+  void begin();
+  void step();
+
+  // bus definitions
   struct busLLA{
     double latG_d;
     double lon_d;
@@ -30,24 +39,13 @@ struct busEcef{
   busEcef m_ECEF = {0.0, 0.0, 0.0};
   busGPS m_GPS = {m_LLA, m_ECEF, 0.0, 0, 0, 0.0};
 
-  int gps_baud = 9600;
-  int boot_time_ms = 2000;
-
-  void begin();
-  void step();
-
 private:
   Common C;
-  double getX();
-  double getY();
-  double getVX();
-  double getVY();
+
   void processInputs();
   double convertToDecimalDegrees(String raw, String dir);
   void splitNMEA(String s, String* fields, int maxFields);
   void processGNGGA(String s);
   double primeVerticalRadiusOfCurvature(double latG_d);
   busEcef lla2ecef(busLLA lla_ddft);
-
-  double x, y, vx, vy, n_ft;
 };

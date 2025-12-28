@@ -4,26 +4,35 @@
 
 class IMU {
 public:
+  IMU(int sampleRate_Hz=50, double yaw0_d=0.0);
+
   int imu_baud = 115200;
   int boot_time_ms = 2000;
-  int nInit = 10; 
+  int nInit = 100; 
   double accel_LSB = 0.00981;
   double gyro_LSB = 0.0625;
+
+  #define BNO055_ADDRESS          0x28
+  #define BNO055_OPR_MODE         0x3D
+  #define BNO055_PWR_MODE         0x3E
+  #define BNO055_PAGE_ID          0x07
+  #define BNO055_ACCEL_DATA_X_LSB 0x08
+  #define BNO055_GYRO_DATA_X_LSB  0x14 
 
   double gyroX_offset_dps = 0.0, gyroY_offset_dps = 0.0, gyroZ_offset_dps = 0.0;
   double accelMagnitudeScaling = 1.0;
 
-  double cutoffAx_Hz = 10, cutoffAy_Hz = 10, cutoffAz_Hz = 10;
-  double cutoffGx_Hz = 10, cutoffGy_Hz = 10, cutoffGz_Hz = 10;
+  double cutoffAx_Hz = 5, cutoffAy_Hz = 5, cutoffAz_Hz = 5;
+  double cutoffGx_Hz = 5, cutoffGy_Hz = 5, cutoffGz_Hz = 5;
 
-  double xRot_d=180.0;
-  double yRot_d=0.0;
-  double zRot_d=0.0;
+  double xRot_d = 180.0;
+  double yRot_d = 0.0;
+  double zRot_d = 0.0;
 
   int sampleRate_Hz;
-  double yaw0_d, _dt_s;
-  IMU(int sampleRate_Hz=100, double yaw0_d=0.0);
+  double yaw0_d, dt_s;
 
+  // public methods
   void begin();
   void step();
   void processStatesRaw();
@@ -32,6 +41,7 @@ public:
   void initializeRotMatrix();
   void rotateRaw();
   
+  // bus definitions
   struct busStates {
     double angularRateX_dps;
     double angularRateY_dps;
@@ -66,24 +76,18 @@ public:
 private:
   Common C;
 
-  #define BNO055_ADDRESS          0x28
-  #define BNO055_OPR_MODE         0x3D
-  #define BNO055_PWR_MODE         0x3E
-  #define BNO055_PAGE_ID          0x07
-  #define BNO055_ACCEL_DATA_X_LSB 0x08
-  #define BNO055_GYRO_DATA_X_LSB  0x14 
-
   double _gyroX_offset_dps = 0.0, _gyroY_offset_dps = 0.0, _gyroZ_offset_dps = 0.0;
   double _accelMagnitudeScaling = 0.0;
+  double _tmpPitch_d = 0.0;
 
-  int16_t ax_raw, ay_raw, az_raw;
-  int16_t gx_raw, gy_raw, gz_raw;
+  int16_t _axRaw, _ayRaw, _azRaw;
+  int16_t _gxRaw, _gyRaw, _gzRaw;
 
-  double axPrev_fps2 = 0.0, ayPrev_fps2 = 0.0, azPrev_fps2 = 0.0;
-  double gxPrev_dps = 0.0, gyPrev_dps = 0.0, gzPrev_dps = 0.0;
+  double _axPrev_fps2 = 0.0, _ayPrev_fps2 = 0.0, _azPrev_fps2 = 0.0;
+  double _gxPrev_dps = 0.0, _gyPrev_dps = 0.0, _gzPrev_dps = 0.0;
 
-  double alphaAx, alphaAy, alphaAz;
-  double alphaGx, alphaGy, alphaGz;
+  double _alphaAx, _alphaAy, _alphaAz;
+  double _alphaGx, _alphaGy, _alphaGz;
 
-  double cX, sX, cY, sY, cZ, sZ;
+  double _cX, _sX, _cY, _sY, _cZ, _sZ;
 };

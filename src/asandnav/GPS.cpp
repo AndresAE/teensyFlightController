@@ -77,18 +77,13 @@ double GPS::convertToDecimalDegrees(String raw, String dir) {
 }
 
 double GPS::primeVerticalRadiusOfCurvature(double latG_d) {
-    return C.WGS84_r_ft / (std::pow(1 - std::pow(C.WGS84_e, 2) * (std::pow(std::sin(C.DEG2RAD * latG_d), 2)), 0.5));
+    return C.WGS84_r_ft / (pow(1 - pow(C.WGS84_e, 2) * (pow(sin(C.DEG2RAD * latG_d), 2)), 0.5));
 }
 
 GPS::busEcef GPS::lla2ecef(busLLA lla_ddft) {
     n_ft = primeVerticalRadiusOfCurvature(lla_ddft.latG_d);
-    m_ECEF.x_ft = (n_ft + lla_ddft.hae_ft) * std::cos(C.DEG2RAD * lla_ddft.latG_d) * std::cos(C.DEG2RAD * lla_ddft.lon_d);
-    m_ECEF.y_ft = (n_ft + lla_ddft.hae_ft) * std::cos(C.DEG2RAD * lla_ddft.latG_d) * std::sin(C.DEG2RAD * lla_ddft.lon_d);
-    m_ECEF.z_ft = ((1 - std::pow(C.WGS84_e, 2))*n_ft + lla_ddft.hae_ft) * std::sin(C.DEG2RAD * lla_ddft.latG_d);
+    m_ECEF.x_ft = (n_ft + lla_ddft.hae_ft) * cos(C.DEG2RAD * lla_ddft.latG_d) * cos(C.DEG2RAD * lla_ddft.lon_d);
+    m_ECEF.y_ft = (n_ft + lla_ddft.hae_ft) * cos(C.DEG2RAD * lla_ddft.latG_d) * sin(C.DEG2RAD * lla_ddft.lon_d);
+    m_ECEF.z_ft = ((1 - pow(C.WGS84_e, 2))*n_ft + lla_ddft.hae_ft) * sin(C.DEG2RAD * lla_ddft.latG_d);
     return m_ECEF;
 }
-
-double GPS::getX() { return x; }
-double GPS::getY() { return y; }
-double GPS::getVX() { return vx; }
-double GPS::getVY() { return vy; }

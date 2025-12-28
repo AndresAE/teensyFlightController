@@ -13,7 +13,7 @@ double Common::trapIntegral(double x, double x_prev, double y, double dt_s) {
 }
 
 double Common::lowPassFilter(double x, double x_prev, double alpha) {
-  return alpha * x + (1.0f - alpha) * x_prev;
+  return alpha * x + (1.0 - alpha) * x_prev;
 }
 
 double Common::calcAlpha(double cutoff_Hz, double dt_s) {
