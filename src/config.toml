@@ -1,9 +1,0 @@
-[apt]
-roll_K_p = 1.0;
-rollRate_K_p = 0.5;
-pitch_K_p = 1.0;
-pitchRate_K_p = 1.0;
-nz_K_p = -0.5;
-heading_K_p = 1.0;
-ny_K_p = 1;
-yawRate_K_p = 1.0;
