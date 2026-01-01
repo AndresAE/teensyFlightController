@@ -1,29 +1,33 @@
+#ifndef IMU_H
+#define IMU_H
+
 #include <cmath>
 #include <Arduino.h>
-#include "Common.h"
+#include "../Common/Common.h"
 
-class IMU {
+class IMU
+{
 public:
-  IMU(int sampleRate_Hz=50, double yaw0_d=0.0);
+  IMU(int sampleRate_Hz = 50, double yaw0_d = 0.0);
 
   int imu_baud = 115200;
   int boot_time_ms = 2000;
-  int nInit = 100; 
+  int nInit = 100;
   double accel_LSB = 0.00981;
   double gyro_LSB = 0.0625;
 
-  #define BNO055_ADDRESS          0x28
-  #define BNO055_OPR_MODE         0x3D
-  #define BNO055_PWR_MODE         0x3E
-  #define BNO055_PAGE_ID          0x07
-  #define BNO055_ACCEL_DATA_X_LSB 0x08
-  #define BNO055_GYRO_DATA_X_LSB  0x14 
+#define BNO055_ADDRESS 0x28
+#define BNO055_OPR_MODE 0x3D
+#define BNO055_PWR_MODE 0x3E
+#define BNO055_PAGE_ID 0x07
+#define BNO055_ACCEL_DATA_X_LSB 0x08
+#define BNO055_GYRO_DATA_X_LSB 0x14
 
   double gyroX_offset_dps = 0.0, gyroY_offset_dps = 0.0, gyroZ_offset_dps = 0.0;
   double accelMagnitudeScaling = 1.0;
 
-  double cutoffAx_Hz = 5, cutoffAy_Hz = 5, cutoffAz_Hz = 5;
-  double cutoffGx_Hz = 5, cutoffGy_Hz = 5, cutoffGz_Hz = 5;
+  double cutoffAx_Hz = 10, cutoffAy_Hz = 10, cutoffAz_Hz = 10;
+  double cutoffGx_Hz = 10, cutoffGy_Hz = 10, cutoffGz_Hz = 10;
 
   double xRot_d = 180.0;
   double yRot_d = 0.0;
@@ -40,9 +44,10 @@ public:
   void readVector(uint8_t startReg, int16_t &xVector, int16_t &yVector, int16_t &zVector);
   void initializeRotMatrix();
   void rotateRaw();
-  
+
   // bus definitions
-  struct busStates {
+  struct busStates
+  {
     double angularRateX_dps;
     double angularRateY_dps;
     double angularRateZ_dps;
@@ -51,27 +56,30 @@ public:
     double specificForceZ_fps2;
   };
 
-  struct busEuler {
+  struct busEuler
+  {
     double roll_d;
     double pitch_d;
     double yaw_d;
   };
 
-  struct busEulerRates {
+  struct busEulerRates
+  {
     double phiDot_dps;
     double thetaDot_dps;
     double psiDot_dps;
   };
 
-  struct busIMU {
+  struct busIMU
+  {
     busStates states;
     busEuler euler;
   };
 
-    busEulerRates m_eulerRate, m_eulerRatePrev;
-    busStates m_States = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
-    busEuler m_Euler = {0, 0, yaw0_d};
-    busIMU m_IMU = {m_States, m_Euler};
+  busEulerRates m_eulerRate, m_eulerRatePrev;
+  busStates m_States = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
+  busEuler m_Euler = {0, 0, yaw0_d};
+  busIMU m_IMU = {m_States, m_Euler};
 
 private:
   Common C;
@@ -91,3 +99,5 @@ private:
 
   double _cX, _sX, _cY, _sY, _cZ, _sZ;
 };
+
+#endif // IMU_H

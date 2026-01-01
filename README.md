@@ -1,2 +1,0 @@
-# ASANDNAV
-arduino navigation solution
