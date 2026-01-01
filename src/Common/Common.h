@@ -18,13 +18,34 @@ public:
     double M2FT = 3.2808;
     double MIN2SEC = 60.0;
 
+    // bus definitions
+    struct busEcef
+    {
+        double x_ft;
+        double y_ft;
+        double z_ft;
+    };
+
+    struct busLLA
+    {
+        double latG_d;
+        double lon_d;
+        double hae_ft;
+    };
+
+    // common methods
     double norm(double x, double y, double z);
     double calcAlpha(double cutoff_Hz, double dt_s);
     double trapIntegral(double x, double x_prev, double y, double dt_s);
     double lowPassFilter(double x, double x_prev, double alpha);
+    double primeVerticalRadiusOfCurvature(double latG_d);
+    busEcef lla2ecef(busLLA lla_ddft);
 
 private:
     double x, y, z;
     double x_prev, alpha, dt_s;
+    double n_ft;
+    busLLA m_LLA = {0.0, 0.0, 0.0};
+    busEcef m_ECEF = {0.0, 0.0, 0.0};
 };
 #endif // COMMON_H

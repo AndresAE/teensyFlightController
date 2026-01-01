@@ -15,13 +15,12 @@ void APT::attachBus(GDC::busGDC *gdcBus, IMU::busIMU *imuBus)
 
 void APT::begin()
 {
-  setGains();
   setupEffectors();
-  m_APT.effectorCmd[0] = effectorOffset[0];
-  m_APT.effectorCmd[1] = effectorOffset[1];
-  m_APT.effectorCmd[2] = effectorOffset[2];
-  m_APT.effectorCmd[3] = effectorOffset[3];
-  m_APT.effectorCmd[4] = effectorOffset[4];
+  m_APT.effectorCmd[0] = aptParams.effectorOffset[0];
+  m_APT.effectorCmd[1] = aptParams.effectorOffset[1];
+  m_APT.effectorCmd[2] = aptParams.effectorOffset[2];
+  m_APT.effectorCmd[3] = aptParams.effectorOffset[3];
+  m_APT.effectorCmd[4] = aptParams.effectorOffset[4];
 }
 
 void APT::step()
@@ -45,19 +44,6 @@ void APT::step()
   setEffectors();
 }
 
-void APT::setGains()
-{
-  // Set default gains (can be modified later)
-  m_aptGains.roll.K_p = 1.0;
-  m_aptGains.rollRate.K_p = 0.5;
-  m_aptGains.pitch.K_p = 1.0;
-  m_aptGains.pitchRate.K_p = 1.0;
-  m_aptGains.nz.K_p = -0.5;
-  m_aptGains.heading.K_p = 1.0;
-  m_aptGains.ny.K_p = 1;
-  m_aptGains.yawRate.K_p = 1.0;
-}
-
 void APT::rollMiddleLoop()
 {
   if (m_GDC->rollMode_e != _prevRollState_e)
@@ -73,7 +59,7 @@ void APT::rollMiddleLoop()
   switch (m_GDC->rollMode_e)
   {
   case GDC::gdcRollMode::GRM_ROLL:
-    m_APT.pbCmd_dps = proportionalControl(m_aptGains.roll.K_p, m_GDC->rollCmd_d, m_IMU->euler.roll_d);
+    m_APT.pbCmd_dps = proportionalControl(aptParams.gains.roll.K_p, m_GDC->rollCmd_d, m_IMU->euler.roll_d);
     break;
   case GDC::gdcRollMode::GRM_BANK:
     // implement bank angle to roll angle conversion if needed
@@ -90,7 +76,7 @@ void APT::rollMiddleLoop()
 
 void APT::rollInnerLoop()
 {
-  m_APT.pbDotCmd_dps2 = proportionalControl(m_aptGains.rollRate.K_p, m_APT.pbCmd_dps, m_IMU->states.angularRateX_dps);
+  m_APT.pbDotCmd_dps2 = proportionalControl(aptParams.gains.rollRate.K_p, m_APT.pbCmd_dps, m_IMU->states.angularRateX_dps);
 }
 
 void APT::pitchMiddleLoop()
@@ -108,14 +94,14 @@ void APT::pitchMiddleLoop()
   switch (m_GDC->pitchMode_e)
   {
   case GDC::gdcPitchMode::GPM_PITCH:
-    m_APT.qbCmd_dps = proportionalControl(m_aptGains.pitch.K_p, m_GDC->pitchCmd_d, m_IMU->euler.pitch_d);
+    m_APT.qbCmd_dps = proportionalControl(aptParams.gains.pitch.K_p, m_GDC->pitchCmd_d, m_IMU->euler.pitch_d);
     break;
   case GDC::gdcPitchMode::GPM_FPA:
     // implement flight path angle to pitch angle conversion if needed
     m_APT.qbCmd_dps = 0.0;
     break;
   case GDC::gdcPitchMode::GPM_ACCEL:
-    m_APT.qbCmd_dps = proportionalControl(m_aptGains.nz.K_p, m_GDC->nzCmd_B_fps2, m_IMU->states.specificForceZ_fps2);
+    m_APT.qbCmd_dps = proportionalControl(aptParams.gains.nz.K_p, m_GDC->nzCmd_B_fps2, m_IMU->states.specificForceZ_fps2);
     break;
   case GDC::gdcPitchMode::GPM_ALTITUDE:
     // implement altitude to flight path angle conversion if needed
@@ -132,7 +118,7 @@ void APT::pitchMiddleLoop()
 
 void APT::pitchInnerLoop()
 {
-  m_APT.qbDotCmd_dps2 = proportionalControl(m_aptGains.pitchRate.K_p, m_APT.qbCmd_dps, m_IMU->states.angularRateY_dps);
+  m_APT.qbDotCmd_dps2 = proportionalControl(aptParams.gains.pitchRate.K_p, m_APT.qbCmd_dps, m_IMU->states.angularRateY_dps);
 }
 
 void APT::yawMiddleLoop()
@@ -150,14 +136,14 @@ void APT::yawMiddleLoop()
   switch (m_GDC->yawMode_e)
   {
   case GDC::gdcYawMode::GYM_HEADING:
-    m_APT.rbCmd_dps = proportionalControl(m_aptGains.heading.K_p, m_GDC->headingCmd_d, m_IMU->euler.yaw_d);
+    m_APT.rbCmd_dps = proportionalControl(aptParams.gains.heading.K_p, m_GDC->headingCmd_d, m_IMU->euler.yaw_d);
     break;
   case GDC::gdcYawMode::GYM_AZIMUTH:
     // implement azimuth to heading conversion if needed
     m_APT.rbCmd_dps = 0.0;
     break;
   case GDC::gdcYawMode::GYM_ACCEL:
-    m_APT.rbCmd_dps = proportionalControl(m_aptGains.ny.K_p, m_GDC->nyCmd_B_fps2, m_IMU->states.specificForceY_fps2);
+    m_APT.rbCmd_dps = proportionalControl(aptParams.gains.ny.K_p, m_GDC->nyCmd_B_fps2, m_IMU->states.specificForceY_fps2);
     break;
   case GDC::gdcYawMode::GYM_YAWRATE:
     m_APT.rbCmd_dps = m_GDC->yawRateCmd_dps;
@@ -170,7 +156,7 @@ void APT::yawMiddleLoop()
 
 void APT::yawInnerLoop()
 {
-  m_APT.rbDotCmd_dps2 = proportionalControl(m_aptGains.yawRate.K_p, m_APT.rbCmd_dps, m_IMU->states.angularRateZ_dps);
+  m_APT.rbDotCmd_dps2 = proportionalControl(aptParams.gains.yawRate.K_p, m_APT.rbCmd_dps, m_IMU->states.angularRateZ_dps);
 }
 
 void APT::speedMiddleLoop()
@@ -205,7 +191,7 @@ void APT::controlAllocation()
   {
     for (int jj = 0; jj < _nRotationalAxes; jj++)
     {
-      m_APT.effectorCmd[ii] += mixingRatioRotational[ii][jj] * wBI_B_dps2[jj];
+      m_APT.effectorCmd[ii] += aptParams.mixingRatioRotational[ii][jj] * wBI_B_dps2[jj];
     }
   }
 
@@ -213,21 +199,21 @@ void APT::controlAllocation()
   {
     for (int jj = 0; jj < _nLinearAxes; jj++)
     {
-      m_APT.effectorCmd[ii] += mixingRatioLinear[ii][jj] * aBI_B_fps2[jj];
+      m_APT.effectorCmd[ii] += aptParams.mixingRatioLinear[ii][jj] * aBI_B_fps2[jj];
     }
   }
 
   for (int ii = 0; ii < _nEffectors; ii++)
   {
-    m_APT.effectorCmd[ii] += effectorOffset[ii];
+    m_APT.effectorCmd[ii] += aptParams.effectorOffset[ii];
     // apply limits and offsets
-    if (m_APT.effectorCmd[ii] > effectorLimitHi[ii])
+    if (m_APT.effectorCmd[ii] > aptParams.effectorLimitHi[ii])
     {
-      m_APT.effectorCmd[ii] = effectorLimitHi[ii] + effectorOffset[ii];
+      m_APT.effectorCmd[ii] = aptParams.effectorLimitHi[ii] + aptParams.effectorOffset[ii];
     }
-    else if (m_APT.effectorCmd[ii] < effectorLimitLo[ii])
+    else if (m_APT.effectorCmd[ii] < aptParams.effectorLimitLo[ii])
     {
-      m_APT.effectorCmd[ii] = effectorLimitLo[ii] + effectorOffset[ii];
+      m_APT.effectorCmd[ii] = aptParams.effectorLimitLo[ii] + aptParams.effectorOffset[ii];
     }
     else
     {
@@ -240,7 +226,7 @@ void APT::setupEffectors()
   _nEffectors = static_cast<int>(sizeof(m_APT.effectorCmd) / sizeof(m_APT.effectorCmd[0]));
   for (int ii = 0; ii < _nEffectors; ii++)
   {
-    analogWriteFrequency(effectorPins[ii], sampleRate_Hz);
+    analogWriteFrequency(aptParams.effectorPins[ii], sampleRate_Hz);
   }
 }
 
@@ -248,8 +234,8 @@ void APT::setEffectors()
 {
   for (int ii = 0; ii < _nEffectors; ii++)
   {
-    pwm_val = pwmMin[ii] + (m_APT.effectorCmd[ii] - degMin[ii]) * (pwmMax[ii] - pwmMin[ii]) / (degMax[ii] - degMin[ii]);
-    analogWrite(effectorPins[ii], pwm_val);
+    pwm_val = aptParams.pwmMin[ii] + (m_APT.effectorCmd[ii] - aptParams.degMin[ii]) * (aptParams.pwmMax[ii] - aptParams.pwmMin[ii]) / (aptParams.degMax[ii] - aptParams.degMin[ii]);
+    analogWrite(aptParams.effectorPins[ii], pwm_val);
   }
 }
 

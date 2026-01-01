@@ -9,9 +9,9 @@ GDC::GDC(int sampleRate_Hz)
 
 void GDC::begin()
 {
-  for (int ii = 0; ii < static_cast<int>(sizeof(controlInPins) / sizeof(controlInPins[0])); ii++)
+  for (int ii = 0; ii < static_cast<int>(sizeof(gdcParams.controlInPins) / sizeof(gdcParams.controlInPins[0])); ii++)
   {
-    pinMode(controlInPins[ii], INPUT);
+    pinMode(gdcParams.controlInPins[ii], INPUT);
   }
   m_GDC.rollMode_e = gdcRollMode::GRM_ROLLRATE;
   m_GDC.pitchMode_e = gdcPitchMode::GPM_ACCEL;
@@ -27,39 +27,39 @@ void GDC::step()
 
 void GDC::getControlInputs()
 {
-  for (int ii = 0; ii < static_cast<int>(sizeof(controlInPins) / sizeof(controlInPins[0])); ii++)
+  for (int ii = 0; ii < static_cast<int>(sizeof(gdcParams.controlInPins) / sizeof(gdcParams.controlInPins[0])); ii++)
   {
-    controlIn_us[ii] = pulseIn(controlInPins[ii], HIGH, controlInTimeOut_ms);
+    gdcParams.controlIn_us[ii] = pulseIn(gdcParams.controlInPins[ii], HIGH, gdcParams.controlInTimeOut_ms);
   }
 }
 
 void GDC::processControlInputs()
 {
-  for (int ii = 0; ii < static_cast<int>(sizeof(controlInPins) / sizeof(controlInPins[0])); ii++)
+  for (int ii = 0; ii < static_cast<int>(sizeof(gdcParams.controlInPins) / sizeof(gdcParams.controlInPins[0])); ii++)
   {
     // scale pwm to control input raw value
-    controlInRaw[ii] = k_pwm[ii] * (static_cast<double>(controlIn_us[ii]) - pwmOffset_us[ii]);
+    gdcParams.controlInRaw[ii] = gdcParams.k_pwm[ii] * (static_cast<double>(gdcParams.controlIn_us[ii]) - gdcParams.pwmOffset_us[ii]);
 
     // apply limits
-    if (controlInRaw[ii] > controlInHiLimit[ii])
+    if (gdcParams.controlInRaw[ii] > gdcParams.controlInHiLimit[ii])
     {
-      controlIn[ii] = controlInHiLimit[ii];
+      gdcParams.controlIn[ii] = gdcParams.controlInHiLimit[ii];
     }
-    else if (controlInRaw[ii] < controlInLoLimit[ii])
+    else if (gdcParams.controlInRaw[ii] < gdcParams.controlInLoLimit[ii])
     {
-      controlIn[ii] = controlInLoLimit[ii];
+      gdcParams.controlIn[ii] = gdcParams.controlInLoLimit[ii];
     }
     else
     {
-      controlIn[ii] = controlInRaw[ii];
+      gdcParams.controlIn[ii] = gdcParams.controlInRaw[ii];
     }
   }
 }
 
 void GDC::assignChannels()
 {
-  m_GDC.rollRateCmd_dps = controlIn[0];
-  m_GDC.nzCmd_B_fps2 = controlIn[1];
-  m_GDC.nyCmd_B_fps2 = controlIn[2];
-  m_GDC.throttleCmd_pct = controlIn[3];
+  m_GDC.rollRateCmd_dps = gdcParams.controlIn[0];
+  m_GDC.nzCmd_B_fps2 = gdcParams.controlIn[1];
+  m_GDC.nyCmd_B_fps2 = gdcParams.controlIn[2];
+  m_GDC.throttleCmd_pct = gdcParams.controlIn[3];
 }

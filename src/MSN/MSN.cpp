@@ -58,10 +58,10 @@ void MSN::evaluateLanding()
 
 void MSN::evaluateIdle()
 {
-  if (m_IMU->states.specificForceX_fps2 >= takeoffThreshold_fps2)
+  if (m_IMU->states.specificForceX_fps2 >= msnParams.takeoffThreshold_fps2)
   {
     _nxTakeoffDebounceCount++;
-    if (_nxTakeoffDebounceCount >= takeoffDebounceLimit)
+    if (_nxTakeoffDebounceCount >= msnParams.takeoffDebounceLimit)
     {
       missionPhase_e = fcsModeMissionPhase::MSN_TAKEOFF;
     }

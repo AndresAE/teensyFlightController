@@ -4,34 +4,14 @@
 #include <cmath>
 #include <Arduino.h>
 #include "../Common/Common.h"
+#include "../config/config.h"
 
 class IMU
 {
 public:
-  IMU(int sampleRate_Hz = 50, double yaw0_d = 0.0);
+  IMU(int sampleRate_Hz, double yaw0_d = 0.0);
 
-  int imu_baud = 115200;
-  int boot_time_ms = 2000;
-  int nInit = 100;
-  double accel_LSB = 0.00981;
-  double gyro_LSB = 0.0625;
-
-#define BNO055_ADDRESS 0x28
-#define BNO055_OPR_MODE 0x3D
-#define BNO055_PWR_MODE 0x3E
-#define BNO055_PAGE_ID 0x07
-#define BNO055_ACCEL_DATA_X_LSB 0x08
-#define BNO055_GYRO_DATA_X_LSB 0x14
-
-  double gyroX_offset_dps = 0.0, gyroY_offset_dps = 0.0, gyroZ_offset_dps = 0.0;
-  double accelMagnitudeScaling = 1.0;
-
-  double cutoffAx_Hz = 10, cutoffAy_Hz = 10, cutoffAz_Hz = 10;
-  double cutoffGx_Hz = 10, cutoffGy_Hz = 10, cutoffGz_Hz = 10;
-
-  double xRot_d = 180.0;
-  double yRot_d = 0.0;
-  double zRot_d = 0.0;
+  Config::imuParams imuParams = cfg.getImuParams();
 
   int sampleRate_Hz;
   double yaw0_d, dt_s;
@@ -83,6 +63,7 @@ public:
 
 private:
   Common C;
+  Config cfg;
 
   double _gyroX_offset_dps = 0.0, _gyroY_offset_dps = 0.0, _gyroZ_offset_dps = 0.0;
   double _accelMagnitudeScaling = 0.0;
@@ -98,6 +79,13 @@ private:
   double _alphaGx, _alphaGy, _alphaGz;
 
   double _cX, _sX, _cY, _sY, _cZ, _sZ;
+
+#define BNO055_ADDRESS 0x28
+#define BNO055_OPR_MODE 0x3D
+#define BNO055_PWR_MODE 0x3E
+#define BNO055_PAGE_ID 0x07
+#define BNO055_ACCEL_DATA_X_LSB 0x08
+#define BNO055_GYRO_DATA_X_LSB 0x14
 };
 
 #endif // IMU_H

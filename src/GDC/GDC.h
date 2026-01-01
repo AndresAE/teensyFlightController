@@ -4,30 +4,23 @@
 #include <cmath>
 #include <Arduino.h>
 #include "../Common/Common.h"
+#include "../config/config.h"
 
 class GDC
 {
 public:
-  GDC(int sampleRate_Hz = 50);
+  GDC(int sampleRate_Hz);
 
   int sampleRate_Hz;
   double dt_s;
+
+  Config::gdcParams gdcParams = cfg.getGdcParams();
 
   // public methods
   void begin();
   void step();
   void getControlInputs();
   void processControlInputs();
-
-  int controlInPins[4] = {0, 1, 2, 3}; // roll, pitch, yaw, throttle
-  double controlIn_us[4] = {0.0, 0.0, 0.0, 0.0};
-  int controlInTimeOut_ms = 25000; // 25 ms timeout
-  double pwmOffset_us[4] = {1500.0, 1833.0, 1500.0, 1000};
-  double k_pwm[4] = {-0.12, 0.1, -0.016, 0.002}; // scale factor from pwm to control input
-  double controlInHiLimit[4] = {60, 16.1, 8.0, 1.0};
-  double controlInLoLimit[4] = {-60.0, -80.5, -8.0, 0.0};
-  double controlInRaw[4] = {0.0, 0.0, 0.0, 0.0};
-  double controlIn[4] = {0.0, 0.0, 0.0, 0.0};
   void assignChannels();
 
   enum gdcRollMode
@@ -78,6 +71,7 @@ public:
 
 private:
   Common C;
+  Config cfg;
 };
 
 #endif // GDC_H

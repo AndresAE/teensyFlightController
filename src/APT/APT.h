@@ -3,72 +3,25 @@
 #include "../Common/Common.h"
 #include "../GDC/GDC.h"
 #include "../IMU/IMU.h"
+#include "../config/config.h"
 
 class APT
 {
 public:
-  APT(int sampleRate_Hz = 50);
-
-  // control gains
-  struct busGains
-  {
-    double K_p;
-    double K_i;
-    double K_f;
-    double k_antiWindup;
-  };
-
-  struct busAptGains
-  {
-    busGains roll;
-    busGains rollRate;
-    busGains pitch;
-    busGains pitchRate;
-    busGains nz;
-    busGains heading;
-    busGains ny;
-    busGains yawRate;
-  };
-
-  busAptGains m_aptGains;
-
-  // commands to effectors
-  double mixingRatioRotational[5][3] = {
-      {1.0, 0.0, 0.1},   // left aileron (+LTED)
-      {-1.0, 0.0, -0.1}, // right aileron (+RTEU)
-      {0.0, 1.0, 0.0},   // elevator (+TEU)
-      {0.1, 0.0, 1.0},   // rudder (+TER)
-      {0.0, 0.0, 0.0}    // throttle
-  };
-
-  double mixingRatioLinear[5][3] = {
-      {0.0, 0.0, 0.0}, // left aileron (+LTED)
-      {0.0, 0.0, 0.0}, // right aileron (+RTEU)
-      {0.0, 0.0, 0.0}, // elevator (+TEU)
-      {0.0, 0.0, 0.0}, // rudder (+TER)
-      {1.0, 0.0, 0.0}  // throttle
-  };
-  double effectorLimitHi[5] = {20.0, 20.0, 20.0, 20.0, 1.0};
-  double effectorLimitLo[5] = {-20.0, -20.0, -20.0, -20.0, 0.0};
-  double effectorOffset[5] = {0.0, 0.0, 0.0, 0.0, 0.0};
-  double effectorPins[5] = {5, 6, 7, 8, 9};
-  int pwmMax[5] = {2000, 2000, 2000, 2000, 2000}; // microseconds
-  int pwmMin[5] = {1000, 1000, 1000, 1000, 1000}; // microseconds
-  double degMax[5] = {30.0, 30.0, 30.0, 30.0, 1.0};
-  double degMin[5] = {-30.0, -30.0, -30.0, -30.0, 0.0};
-  int pwm_val;
+  APT(int sampleRate_Hz);
 
   int sampleRate_Hz;
   double dt_s;
+  int pwm_val;
+  double integralError = 0.0;
   double wBI_B_dps2[3];
   double aBI_B_fps2[3];
 
-  double integralError = 0.0;
+  Config::aptParams aptParams = cfg.getAptParams();
 
   // public methods
   void begin();
   void step();
-  void setGains();
   void rollMiddleLoop();
   void rollInnerLoop();
   void pitchMiddleLoop();
@@ -110,6 +63,8 @@ public:
 
 private:
   Common C;
+  Config cfg;
+
   int _nxTakeoffDebounceCount = 0;
 
   int _prevRollState_e;

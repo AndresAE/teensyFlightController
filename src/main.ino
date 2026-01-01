@@ -1,40 +1,37 @@
-
 #include "MSN/MSN.h"
 #include "IMU/IMU.h"
 #include "GPS/GPS.h"
 #include "GDC/GDC.h"
 #include "APT/APT.h"
+#include "Config/config.h"
 
+Config cfg;
+Config::fcsParams fcsParams = cfg.getFcsParams();
 int next100HzTask = 0;
 int next10HzTask = 0;
-int sampleRate_Hz = 100;
 int now_ms;
-bool useTM_b = false;  // set to true for TM
-int tmDelay_ms = 5000; // hold time for TM startup
-int serialBaud = useTM_b ? 57600 : 9600;
 Stream *serialPort;
 
 int endTime = 0;
 
-MSN msn(sampleRate_Hz);
-IMU imu(sampleRate_Hz);
+MSN msn(fcsParams.sampleRate_Hz);
+IMU imu(fcsParams.sampleRate_Hz);
 GPS gps;
-GDC gdc(sampleRate_Hz);
-APT apt(sampleRate_Hz);
-
+GDC gdc(fcsParams.sampleRate_Hz);
+APT apt(fcsParams.sampleRate_Hz);
 void setup()
 {
-  if (useTM_b)
+  if (fcsParams.useTM_b)
   {
-    Serial5.begin(serialBaud);
+    Serial5.begin(fcsParams.serialBaud);
     serialPort = &Serial5;
 
     serialPort->println("----- Holding for TM -----");
-    delay(tmDelay_ms);
+    delay(fcsParams.tmDelay_ms);
   }
   else
   {
-    Serial.begin(serialBaud);
+    Serial.begin(fcsParams.serialBaud);
     serialPort = &Serial;
   }
 

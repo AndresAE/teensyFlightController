@@ -2,11 +2,12 @@
 #include <Arduino.h>
 #include "../Common/Common.h"
 #include "../IMU/IMU.h"
+#include "../config/config.h"
 
 class MSN
 {
 public:
-    MSN(int sampleRate_Hz = 50);
+    MSN(int sampleRate_Hz);
 
     enum fcsModeMissionPhase
     {
@@ -17,9 +18,7 @@ public:
     };
 
     fcsModeMissionPhase missionPhase_e = MSN_IDLE;
-
-    int takeoffDebounceLimit = 5;
-    double takeoffThreshold_fps2 = 10.0;
+    Config::msnParams msnParams = cfg.getMsnParams();
 
     int sampleRate_Hz;
     double dt_s;
@@ -38,5 +37,6 @@ public:
     IMU::busIMU *m_IMU = nullptr;
 
 private:
+    Config cfg;
     int _nxTakeoffDebounceCount = 0;
 };
