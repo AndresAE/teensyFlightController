@@ -9,12 +9,13 @@
 - Telemetry Radio (optional hardwire)
 
 ## To-Do:
-- [] Implement MSN
-- [] Check loop timing and optimize
-- [] Calibrate limits and gains
+- [x] Implement MSN
+- [x] Check loop timing and optimize
+- [x] Calibrate limits and gains
 - [x] Add visualization tool
-- [] add PyQtGraph capabilites to visualization
+- [x] add PyQtGraph capabilites to visualization
+- [x] recolor PyQtGraph
 - [] Check servos
-- [] Add config file for easy parameter changes
+- [x] Add config file for easy parameter changes
 - [x] check TM with new architecture
 - [] hardware abstraction layer to make IMU and GPS independent

@@ -1,20 +1,19 @@
 import serial
 import time
 import re
-import matplotlib.pyplot as plt
-from matplotlib.animation import FuncAnimation
+from collections import deque
+import numpy as np
+import pyqtgraph as pg
+from pyqtgraph.Qt import QtCore, QtWidgets
 
 
 # ============================================================
 # SERIAL STREAM
 # ============================================================
 
-def serial_stream(port="COM5", baud=115200):
-    ser = serial.Serial(port, baud, timeout=0.1)
-    while True:
-        line = ser.readline().decode("utf-8", errors="ignore").strip()
-        if line:
-            yield time.time(), line
+def open_serial(port="COM5", baud=115200):
+    ser = serial.Serial(port, baud, timeout=0)
+    return ser
 
 
 # ============================================================
@@ -55,118 +54,199 @@ def parse_group_line(line):
 # READ 5-LINE TELEMETRY BLOCK
 # ============================================================
 
-def read_message_block(stream):
+def read_lines_from_serial(ser):
+    lines = []
+    # read all available lines (non-blocking because timeout=0)
+    while True:
+        raw = ser.readline()
+        if not raw:
+            break
+        try:
+            line = raw.decode("utf-8", errors="ignore").strip()
+        except Exception:
+            continue
+        if line:
+            lines.append((time.time(), line))
+    return lines
+
+
+def read_message_block_from_lines(lines):
+    # single telemetry block may span multiple groups; return one block per 5-group block
+    blocks = []
     block = {}
-    for _ in range(5):
-        t, line = next(stream)
+    count = 0
+    for t, line in lines:
         group, data = parse_group_line(line)
         if group:
             block[group] = data
             block["timestamp"] = t
-    return block
+            count += 1
+        if count >= 5:
+            blocks.append(block)
+            block = {}
+            count = 0
+    return blocks
 
 
 # ============================================================
 # HISTORY BUFFERS (ROLLING)
 # ============================================================
 
-MAX_POINTS = 500
+MAX_POINTS = 2000
 
+# numeric rolling deques (fast, preallocated behavior)
 history = {
-    "t": [],
-    "imu": [],
-    "gps": [],
-    "gdc": [],
+    "t": deque(maxlen=MAX_POINTS),
+    "ax": deque(maxlen=MAX_POINTS),
+    "ay": deque(maxlen=MAX_POINTS),
+    "az": deque(maxlen=MAX_POINTS),
+    "roll": deque(maxlen=MAX_POINTS),
+    "pitch": deque(maxlen=MAX_POINTS),
+    "yaw": deque(maxlen=MAX_POINTS),
+    "pb": deque(maxlen=MAX_POINTS),
+    "ny": deque(maxlen=MAX_POINTS),
+    "nz": deque(maxlen=MAX_POINTS),
+    "throttle": deque(maxlen=MAX_POINTS),
+    "lat": deque(maxlen=MAX_POINTS),
+    "lon": deque(maxlen=MAX_POINTS),
 }
 
-def append_block(block):
-    history["t"].append(block["timestamp"])
-    history["imu"].append(block.get("imu", {}))
-    history["gps"].append(block.get("gps", {}))
-    history["gdc"].append(block.get("gdc", {}))
 
-    for k in history:
-        if len(history[k]) > MAX_POINTS:
-            history[k] = history[k][-MAX_POINTS:]
+def append_block(block):
+    t = block.get("timestamp", time.time())
+    imu = block.get("imu", {})
+    gdc = block.get("gdc", {})
+    gps = block.get("gps", {})
+
+    history["t"].append(t)
+    history["ax"].append(imu.get("ax_fps2", np.nan))
+    history["ay"].append(imu.get("ay_fps2", np.nan))
+    history["az"].append(imu.get("az_fps2", np.nan))
+    history["roll"].append(imu.get("roll_d", np.nan))
+    history["pitch"].append(imu.get("pitch_d", np.nan))
+    history["yaw"].append(imu.get("yaw_d", np.nan))
+    history["pb"].append(gdc.get("pbCmd_dps", np.nan))
+    history["ny"].append(gdc.get("nyCmd_B_fps2", np.nan))
+    history["nz"].append(gdc.get("nzCmd_B_fps2", np.nan))
+    history["throttle"].append(gdc.get("throttleCmd_pct", np.nan))
+    history["lat"].append(gps.get("latG_d", np.nan))
+    history["lon"].append(gps.get("lon_d", np.nan))
 
 
 # ============================================================
 # REAL-TIME PLOT SETUP
 # ============================================================
 
-fig, (ax_imu, ax_euler, ax_gdc, ax_gps) = plt.subplots(4, 1, figsize=(10, 14))
+app = QtWidgets.QApplication([])
+win = pg.GraphicsLayoutWidget(show=True, title="Telemetry")
+win.resize(1000, 800)
+
+ax_imu = win.addPlot(row=0, col=0, title="IMU Accelerations (fps²)")
+ax_imu.showGrid(x=True, y=True)
+ax_imu.addLegend()
+# distinct colors for ax, ay, az
+imu_colors = ("r", "g", "b")
+imu_lines = [ax_imu.plot(pen=pg.mkPen(color=c, width=1), name=l) for l, c in zip(("ax", "ay", "az"), imu_colors)]
+
+ax_euler = win.addPlot(row=1, col=0, title="Euler Angles")
+ax_euler.showGrid(x=True, y=True)
+ax_euler.addLegend()
+# distinct colors for roll, pitch, yaw
+euler_colors = ("m", "y", "c")
+euler_lines = [ax_euler.plot(pen=pg.mkPen(color=c, width=1), name=l) for l, c in zip(("roll", "pitch", "yaw"), euler_colors)]
+
+ax_gdc = win.addPlot(row=2, col=0, title="GDC Commands")
+ax_gdc.showGrid(x=True, y=True)
+ax_gdc.addLegend()
+# distinct colors for gdc lines: pb, ny, nz, throttle
+gdc_colors = ("#d62728", "#ff7f0e", "#2ca02c", "#9467bd")
+gdc_lines = [ax_gdc.plot(pen=pg.mkPen(color=c, width=1), name=l) for l, c in zip(("pbCmd_dps", "nyCmd", "nzCmd", "throttle"), gdc_colors)]
+
+ax_gps = win.addPlot(row=3, col=0, title="GPS Track")
+ax_gps.showGrid(x=True, y=True)
+gps_scatter = pg.ScatterPlotItem(size=6, brush=pg.mkBrush(100, 100, 255, 150))
+ax_gps.addItem(gps_scatter)
+
+frame_count = 0
+Y_RECALC_PERIOD = 10  # recalc y-limits every N frames
+TIME_WINDOW_S = 10.0  # fixed time window (seconds) to show
 
 
-def update(frame):
-    block = read_message_block(stream)
-    append_block(block)
+def update():
+    global frame_count
+    # read all available lines from serial
+    lines = read_lines_from_serial(stream_ser)
+    if not lines:
+        return
+    blocks = read_message_block_from_lines(lines)
+    for b in blocks:
+        append_block(b)
 
-    t = history["t"]
+    t = np.array(history["t"])
+    if t.size == 0:
+        return
 
-    # ---------------- IMU STRIP CHART ----------------
-    ax_vals = [d.get("ax_fps2") for d in history["imu"]]
-    ay_vals = [d.get("ay_fps2") for d in history["imu"]]
-    az_vals = [d.get("az_fps2") for d in history["imu"]]
+    t0 = t[-1] - TIME_WINDOW_S
 
-    ax_imu.cla()
-    ax_imu.plot(t, ax_vals, label="ax")
-    ax_imu.plot(t, ay_vals, label="ay")
-    ax_imu.plot(t, az_vals, label="az")
-    ax_imu.set_title("IMU Accelerations (fps²)")
-    ax_imu.set_ylabel("Accel")
-    ax_imu.grid(True)
-    ax_imu.legend()
+    ax_vals = np.array(history["ax"])
+    ay_vals = np.array(history["ay"])
+    az_vals = np.array(history["az"])
 
-    # ---------------- EULER ANGLES ----------------
-    roll = [d.get("roll_d") for d in history["imu"]]
-    pitch = [d.get("pitch_d") for d in history["imu"]]
-    yaw = [d.get("yaw_d") for d in history["imu"]]
+    # update curves (pyqtgraph expects x,y arrays)
+    for line, vals in zip(imu_lines, (ax_vals, ay_vals, az_vals)):
+        line.setData(t, vals)
+    ax_imu.setXRange(max(t[0], t0), t[-1], padding=0)
 
-    ax_euler.cla()
-    ax_euler.plot(t, roll, label="roll (deg)")
-    ax_euler.plot(t, pitch, label="pitch (deg)")
-    ax_euler.plot(t, yaw, label="yaw (deg)")
-    ax_euler.set_title("Euler Angles")
-    ax_euler.set_ylabel("Degrees")
-    ax_euler.grid(True)
-    ax_euler.legend()
+    roll = np.array(history["roll"])
+    pitch = np.array(history["pitch"])
+    yaw = np.array(history["yaw"])
+    for line, vals in zip(euler_lines, (roll, pitch, yaw)):
+        line.setData(t, vals)
+    ax_euler.setXRange(max(t[0], t0), t[-1], padding=0)
 
-    # ---------------- GDC COMMANDS ----------------
-    pb = [d.get("pbCmd_dps") for d in history["gdc"]]
-    ny = [d.get("nyCmd_B_fps2") for d in history["gdc"]]
-    nz = [d.get("nzCmd_B_fps2") for d in history["gdc"]]
-    throttle = [d.get("throttleCmd_pct") for d in history["gdc"]]
+    pb = np.array(history["pb"])
+    ny = np.array(history["ny"])
+    nz = np.array(history["nz"])
+    throttle = np.array(history["throttle"])
+    for line, vals in zip(gdc_lines, (pb, ny, nz, throttle)):
+        line.setData(t, vals)
+    ax_gdc.setXRange(max(t[0], t0), t[-1], padding=0)
 
-    ax_gdc.cla()
-    ax_gdc.plot(t, pb, label="pbCmd_dps")
-    ax_gdc.plot(t, ny, label="nyCmd_B_fps2")
-    ax_gdc.plot(t, nz, label="nzCmd_B_fps2")
-    ax_gdc.plot(t, throttle, label="throttleCmd_pct")
-    ax_gdc.set_title("GDC Commands")
-    ax_gdc.set_ylabel("Commands")
-    ax_gdc.grid(True)
-    ax_gdc.legend()
+    lat = np.array(history["lat"])
+    lon = np.array(history["lon"])
+    if lat.size:
+        pts = np.column_stack((lon, lat))
+        spots = [{'pos': p} for p in pts]
+        gps_scatter.setData(spots)
 
-    # ---------------- GPS SCATTER ----------------
-    lat = [d.get("latG_d") for d in history["gps"]]
-    lon = [d.get("lon_d") for d in history["gps"]]
+    # recalc y-limits periodically
+    if frame_count % Y_RECALC_PERIOD == 0:
+        for ax, arrays in ((ax_imu, (ax_vals, ay_vals, az_vals)),
+                           (ax_euler, (roll, pitch, yaw)),
+                           (ax_gdc, (pb, ny, nz, throttle))):
+            stacked = np.vstack([a for a in arrays])
+            if np.isfinite(stacked).any():
+                vmin = np.nanmin(stacked)
+                vmax = np.nanmax(stacked)
+                if vmin == vmax:
+                    vmin -= 0.5
+                    vmax += 0.5
+                ax.setYRange(vmin, vmax, padding=0)
 
-    ax_gps.cla()
-    ax_gps.scatter(lon, lat, s=8, alpha=0.6)
-    ax_gps.set_title("GPS Track")
-    ax_gps.set_xlabel("Longitude")
-    ax_gps.set_ylabel("Latitude")
-    ax_gps.grid(True)
-
-    return []
+    frame_count += 1
 
 
 # ============================================================
 # MAIN
 # ============================================================
 
-stream = serial_stream("COM6", 9600)
+# open serial port used by update()
+stream_ser = open_serial("COM6", 9600)
 
-ani = FuncAnimation(fig, update, interval=50)
-plt.tight_layout()
-plt.show()
+# use a Qt timer to call update periodically
+timer = QtCore.QTimer()
+timer.timeout.connect(update)
+timer.start(50)  # ms
+
+if __name__ == "__main__":
+    app.exec_()

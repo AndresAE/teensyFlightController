@@ -11,8 +11,6 @@ class IMU
 public:
   IMU(int sampleRate_Hz, double yaw0_d = 0.0);
 
-  Config::imuParams imuParams = cfg.getImuParams();
-
   int sampleRate_Hz;
   double yaw0_d, dt_s;
 
@@ -64,6 +62,8 @@ public:
 private:
   Common C;
   Config cfg;
+
+  const Config::imuParams &imuParams = cfg.getImuParams();
 
   double _gyroX_offset_dps = 0.0, _gyroY_offset_dps = 0.0, _gyroZ_offset_dps = 0.0;
   double _accelMagnitudeScaling = 0.0;

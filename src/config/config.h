@@ -7,9 +7,9 @@ public:
     Config() {}
     struct fcsParams
     {
-        bool useTM_b = false;
+        bool useTM_b = true;
         int serialBaud = useTM_b ? 57600 : 9600;
-        int sampleRate_Hz = 100;
+        int sampleRate_Hz = 10;
         int tmDelay_ms = 5000;
     };
     struct busGains
@@ -74,12 +74,12 @@ public:
         double xRot_d = 180.0;
         double yRot_d = 0.0;
         double zRot_d = 0.0;
-        double cutoffAx_Hz = 10.0;
-        double cutoffAy_Hz = 10.0;
-        double cutoffAz_Hz = 10.0;
-        double cutoffGx_Hz = 10.0;
-        double cutoffGy_Hz = 10.0;
-        double cutoffGz_Hz = 10.0;
+        double cutoffAx_Hz = 5.0;
+        double cutoffAy_Hz = 5.0;
+        double cutoffAz_Hz = 5.0;
+        double cutoffGx_Hz = 5.0;
+        double cutoffGy_Hz = 5.0;
+        double cutoffGz_Hz = 5.0;
         double gyroX_offset_dps = 0.0;
         double gyroY_offset_dps = 0.0;
         double gyroZ_offset_dps = 0.0;
@@ -94,10 +94,10 @@ public:
     {
         int controlInPins[4] = {0, 1, 2, 3}; // roll, pitch, yaw, throttle
         int controlInTimeOut_ms = 25000;     // 25 ms timeout
-        double pwmOffset_us[4] = {1500.0, 1833.0, 1500.0, 1000};
-        double k_pwm[4] = {-0.12, 0.1, -0.016, 0.002}; // scale factor from pwm to control input
-        double controlInHiLimit[4] = {60, 16.1, 8.0, 1.0};
-        double controlInLoLimit[4] = {-60.0, -80.5, -8.0, 0.0};
+        double pwmOffset_us[4] = {1500.0, 1770, 1500.0, 1100};
+        double k_pwm[4] = {-0.15, 0.12, -0.02, 0.00125}; // scale factor from pwm to control input
+        double controlInHiLimit[4] = {60, 16.0, 8.0, 1.0};
+        double controlInLoLimit[4] = {-60.0, -80.0, -8.0, 0.0};
         double controlIn_us[4] = {0.0, 0.0, 0.0, 0.0};
         double controlInRaw[4] = {0.0, 0.0, 0.0, 0.0};
         double controlIn[4] = {0.0, 0.0, 0.0, 0.0};
@@ -115,27 +115,27 @@ public:
     gpsParams gpsParams_;
     msnParams msnParams_;
 
-    fcsParams getFcsParams()
+    const fcsParams &getFcsParams()
     {
         return fcsParams_;
     }
-    aptParams getAptParams()
+    const aptParams &getAptParams()
     {
         return aptParams_;
     }
-    imuParams getImuParams()
+    const imuParams &getImuParams()
     {
         return imuParams_;
     }
-    gpsParams getGpsParams()
+    const gpsParams &getGpsParams()
     {
         return gpsParams_;
     }
-    gdcParams getGdcParams()
+    const gdcParams &getGdcParams()
     {
         return gdcParams_;
     }
-    msnParams getMsnParams()
+    const msnParams &getMsnParams()
     {
         return msnParams_;
     }

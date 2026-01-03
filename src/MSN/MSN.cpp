@@ -1,10 +1,11 @@
 #include "MSN.h"
 #include "Wire.h"
 
-MSN::MSN(int sampleRate_Hz)
-    : sampleRate_Hz(sampleRate_Hz)
+MSN::MSN(int sampleRate_Hz, IMU &imu)
+    : sampleRate_Hz(sampleRate_Hz), m_IMU_obj(imu), msnParams(cfg.getMsnParams())
 {
   dt_s = 1 / static_cast<double>(sampleRate_Hz);
+  _busAttached_b = true;
 }
 
 void MSN::begin()
@@ -13,13 +14,14 @@ void MSN::begin()
 
 void MSN::step()
 {
+  if (!_busAttached_b)
+  {
+    return;
+  }
   missionManager();
 }
 
-void MSN::attachBus(IMU::busIMU *imuBus)
-{
-  m_IMU = imuBus;
-}
+// attachBus removed; MSN uses IMU reference passed in constructor
 
 void MSN::missionManager()
 {
@@ -58,7 +60,7 @@ void MSN::evaluateLanding()
 
 void MSN::evaluateIdle()
 {
-  if (m_IMU->states.specificForceX_fps2 >= msnParams.takeoffThreshold_fps2)
+  if (m_IMU_obj.m_IMU.states.specificForceX_fps2 >= msnParams.takeoffThreshold_fps2)
   {
     _nxTakeoffDebounceCount++;
     if (_nxTakeoffDebounceCount >= msnParams.takeoffDebounceLimit)

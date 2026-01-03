@@ -14,8 +14,6 @@ public:
   int sampleRate_Hz;
   double dt_s;
 
-  Config::gdcParams gdcParams = cfg.getGdcParams();
-
   // public methods
   void begin();
   void step();
@@ -72,6 +70,10 @@ public:
 private:
   Common C;
   Config cfg;
+
+  Config::gdcParams gdcParams = cfg.getGdcParams();
+
+  int _nChannels = 0;
 };
 
 #endif // GDC_H

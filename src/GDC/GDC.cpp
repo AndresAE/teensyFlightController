@@ -2,14 +2,15 @@
 #include "Wire.h"
 
 GDC::GDC(int sampleRate_Hz)
-    : sampleRate_Hz(sampleRate_Hz)
+    : sampleRate_Hz(sampleRate_Hz), gdcParams(cfg.getGdcParams())
 {
   dt_s = 1 / static_cast<double>(sampleRate_Hz);
 }
 
 void GDC::begin()
 {
-  for (int ii = 0; ii < static_cast<int>(sizeof(gdcParams.controlInPins) / sizeof(gdcParams.controlInPins[0])); ii++)
+  _nChannels = static_cast<int>(sizeof(gdcParams.controlInPins) / sizeof(gdcParams.controlInPins[0]));
+  for (int ii = 0; ii < _nChannels; ii++)
   {
     pinMode(gdcParams.controlInPins[ii], INPUT);
   }
@@ -27,7 +28,7 @@ void GDC::step()
 
 void GDC::getControlInputs()
 {
-  for (int ii = 0; ii < static_cast<int>(sizeof(gdcParams.controlInPins) / sizeof(gdcParams.controlInPins[0])); ii++)
+  for (int ii = 0; ii < _nChannels; ii++)
   {
     gdcParams.controlIn_us[ii] = pulseIn(gdcParams.controlInPins[ii], HIGH, gdcParams.controlInTimeOut_ms);
   }
@@ -35,7 +36,7 @@ void GDC::getControlInputs()
 
 void GDC::processControlInputs()
 {
-  for (int ii = 0; ii < static_cast<int>(sizeof(gdcParams.controlInPins) / sizeof(gdcParams.controlInPins[0])); ii++)
+  for (int ii = 0; ii < _nChannels; ii++)
   {
     // scale pwm to control input raw value
     gdcParams.controlInRaw[ii] = gdcParams.k_pwm[ii] * (static_cast<double>(gdcParams.controlIn_us[ii]) - gdcParams.pwmOffset_us[ii]);

@@ -3,6 +3,7 @@
 String sentence = "";
 
 GPS::GPS()
+    : gpsParams(cfg.getGpsParams())
 {
   // Constructor logic if needed
 }
@@ -11,7 +12,8 @@ void GPS::begin()
 {
   Serial3.begin(gpsParams.gps_baud);
   while (!Serial3)
-    ; // Wait for serial
+  {
+  }; // Wait for serial
   delay(gpsParams.boot_time_ms);
 }
 

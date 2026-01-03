@@ -1,3 +1,6 @@
+#ifndef GPS_H
+#define GPS_H
+
 #include <cmath>
 #include <Arduino.h>
 #include "../Common/Common.h"
@@ -7,8 +10,6 @@ class GPS
 {
 public:
   GPS();
-
-  Config::gpsParams gpsParams = cfg.getGpsParams();
 
   // public methods
   void begin();
@@ -33,8 +34,12 @@ private:
   Common C;
   Config cfg;
 
+  const Config::gpsParams &gpsParams;
+
   void processInputs();
   double convertToDecimalDegrees(String raw, String dir);
   void splitNMEA(String s, String *fields, int maxFields);
   void processGNGGA(String s);
 };
+
+#endif // GPS_H

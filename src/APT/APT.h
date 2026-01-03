@@ -1,3 +1,6 @@
+#ifndef APT_H
+#define APT_H
+
 #include <cmath>
 #include <Arduino.h>
 #include "../Common/Common.h"
@@ -8,7 +11,7 @@
 class APT
 {
 public:
-  APT(int sampleRate_Hz);
+  APT(int sampleRate_Hz, GDC &gdc, IMU &imu);
 
   int sampleRate_Hz;
   double dt_s;
@@ -16,8 +19,6 @@ public:
   double integralError = 0.0;
   double wBI_B_dps2[3];
   double aBI_B_fps2[3];
-
-  Config::aptParams aptParams = cfg.getAptParams();
 
   // public methods
   void begin();
@@ -36,7 +37,7 @@ public:
   double proportionalControl(double k_p, double cvc, double cv);
   double proportionalIntegralControl(double k_p, double k_i, double cvc, double cv, bool resetIntegral_b);
   double proportionalIntegralFeedforwardControl(double k_p, double k_i, double k_f, double cvc, double cv, bool resetIntegral_b);
-  void attachBus(GDC::busGDC *gdcBus, IMU::busIMU *imuBus);
+  // attachBus removed: APT holds references to GDC and IMU objects
 
   struct busAPT
   {
@@ -56,25 +57,26 @@ public:
   };
 
   busAPT m_APT;
-
-  // pointers to external bus objects (set from main sketch)
-  GDC::busGDC *m_GDC = nullptr;
-  IMU::busIMU *m_IMU = nullptr;
+  GDC &m_GDC_obj;
+  IMU &m_IMU_obj;
 
 private:
   Common C;
   Config cfg;
 
-  int _nxTakeoffDebounceCount = 0;
+  const Config::aptParams &aptParams;
 
+  bool _busAttached_b = false;
+  int _nxTakeoffDebounceCount = 0;
   int _prevRollState_e;
   int _prevPitchState_e;
   int _prevYawState_e;
   bool _resetRollIntegral_b = false;
   bool _resetPitchIntegral_b = false;
   bool _resetYawIntegral_b = false;
-
   int _nEffectors;
   int _nRotationalAxes = 3;
   int _nLinearAxes = 3;
 };
+
+#endif // APT_H

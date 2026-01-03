@@ -1,16 +1,11 @@
 #include "APT.h"
 #include "Wire.h"
 
-APT::APT(int sampleRate_Hz)
-    : sampleRate_Hz(sampleRate_Hz)
+APT::APT(int sampleRate_Hz, GDC &gdc, IMU &imu)
+    : sampleRate_Hz(sampleRate_Hz), m_GDC_obj(gdc), m_IMU_obj(imu), aptParams(cfg.getAptParams())
 {
   dt_s = 1 / static_cast<double>(sampleRate_Hz);
-}
-
-void APT::attachBus(GDC::busGDC *gdcBus, IMU::busIMU *imuBus)
-{
-  m_GDC = gdcBus;
-  m_IMU = imuBus;
+  _busAttached_b = true;
 }
 
 void APT::begin()
@@ -25,11 +20,10 @@ void APT::begin()
 
 void APT::step()
 {
-  if (m_GDC == nullptr || m_IMU == nullptr)
+  if (!_busAttached_b)
   {
     return;
   }
-
   rollMiddleLoop();
   pitchMiddleLoop();
   yawMiddleLoop();
@@ -46,7 +40,7 @@ void APT::step()
 
 void APT::rollMiddleLoop()
 {
-  if (m_GDC->rollMode_e != _prevRollState_e)
+  if (m_GDC_obj.m_GDC.rollMode_e != _prevRollState_e)
   {
     // reset integrators or states if needed
     _resetRollIntegral_b = true;
@@ -55,33 +49,32 @@ void APT::rollMiddleLoop()
   {
     _resetRollIntegral_b = false;
   }
-
-  switch (m_GDC->rollMode_e)
+  switch (m_GDC_obj.m_GDC.rollMode_e)
   {
   case GDC::gdcRollMode::GRM_ROLL:
-    m_APT.pbCmd_dps = proportionalControl(aptParams.gains.roll.K_p, m_GDC->rollCmd_d, m_IMU->euler.roll_d);
+    m_APT.pbCmd_dps = proportionalControl(aptParams.gains.roll.K_p, m_GDC_obj.m_GDC.rollCmd_d, m_IMU_obj.m_IMU.euler.roll_d);
     break;
   case GDC::gdcRollMode::GRM_BANK:
     // implement bank angle to roll angle conversion if needed
     m_APT.pbCmd_dps = 0.0;
     break;
   case GDC::gdcRollMode::GRM_ROLLRATE:
-    m_APT.pbCmd_dps = m_GDC->rollRateCmd_dps;
+    m_APT.pbCmd_dps = m_GDC_obj.m_GDC.rollRateCmd_dps;
     break;
   default:
     m_APT.pbCmd_dps = 0.0;
   }
-  _prevRollState_e = m_GDC->rollMode_e;
+  _prevRollState_e = m_GDC_obj.m_GDC.rollMode_e;
 }
 
 void APT::rollInnerLoop()
 {
-  m_APT.pbDotCmd_dps2 = proportionalControl(aptParams.gains.rollRate.K_p, m_APT.pbCmd_dps, m_IMU->states.angularRateX_dps);
+  m_APT.pbDotCmd_dps2 = proportionalControl(aptParams.gains.rollRate.K_p, m_APT.pbCmd_dps, m_IMU_obj.m_IMU.states.angularRateX_dps);
 }
 
 void APT::pitchMiddleLoop()
 {
-  if (m_GDC->pitchMode_e != _prevPitchState_e)
+  if (m_GDC_obj.m_GDC.pitchMode_e != _prevPitchState_e)
   {
     // reset integrators or states if needed
     _resetPitchIntegral_b = true;
@@ -91,39 +84,39 @@ void APT::pitchMiddleLoop()
     _resetPitchIntegral_b = false;
   }
 
-  switch (m_GDC->pitchMode_e)
+  switch (m_GDC_obj.m_GDC.pitchMode_e)
   {
   case GDC::gdcPitchMode::GPM_PITCH:
-    m_APT.qbCmd_dps = proportionalControl(aptParams.gains.pitch.K_p, m_GDC->pitchCmd_d, m_IMU->euler.pitch_d);
+    m_APT.qbCmd_dps = proportionalControl(aptParams.gains.pitch.K_p, m_GDC_obj.m_GDC.pitchCmd_d, m_IMU_obj.m_IMU.euler.pitch_d);
     break;
   case GDC::gdcPitchMode::GPM_FPA:
     // implement flight path angle to pitch angle conversion if needed
     m_APT.qbCmd_dps = 0.0;
     break;
   case GDC::gdcPitchMode::GPM_ACCEL:
-    m_APT.qbCmd_dps = proportionalControl(aptParams.gains.nz.K_p, m_GDC->nzCmd_B_fps2, m_IMU->states.specificForceZ_fps2);
+    m_APT.qbCmd_dps = proportionalControl(aptParams.gains.nz.K_p, m_GDC_obj.m_GDC.nzCmd_B_fps2, m_IMU_obj.m_IMU.states.specificForceZ_fps2);
     break;
   case GDC::gdcPitchMode::GPM_ALTITUDE:
     // implement altitude to flight path angle conversion if needed
     m_APT.qbCmd_dps = 0.0;
     break;
   case GDC::gdcPitchMode::GPM_PITCHRATE:
-    m_APT.qbCmd_dps = m_GDC->pitchRateCmd_dps;
+    m_APT.qbCmd_dps = m_GDC_obj.m_GDC.pitchRateCmd_dps;
     break;
   default:
     m_APT.qbCmd_dps = 0.0;
   }
-  _prevPitchState_e = m_GDC->pitchMode_e;
+  _prevPitchState_e = m_GDC_obj.m_GDC.pitchMode_e;
 }
 
 void APT::pitchInnerLoop()
 {
-  m_APT.qbDotCmd_dps2 = proportionalControl(aptParams.gains.pitchRate.K_p, m_APT.qbCmd_dps, m_IMU->states.angularRateY_dps);
+  m_APT.qbDotCmd_dps2 = proportionalControl(aptParams.gains.pitchRate.K_p, m_APT.qbCmd_dps, m_IMU_obj.m_IMU.states.angularRateY_dps);
 }
 
 void APT::yawMiddleLoop()
 {
-  if (m_GDC->yawMode_e != _prevYawState_e)
+  if (m_GDC_obj.m_GDC.yawMode_e != _prevYawState_e)
   {
     // reset integrators or states if needed
     _resetYawIntegral_b = true;
@@ -133,30 +126,30 @@ void APT::yawMiddleLoop()
     _resetYawIntegral_b = false;
   }
 
-  switch (m_GDC->yawMode_e)
+  switch (m_GDC_obj.m_GDC.yawMode_e)
   {
   case GDC::gdcYawMode::GYM_HEADING:
-    m_APT.rbCmd_dps = proportionalControl(aptParams.gains.heading.K_p, m_GDC->headingCmd_d, m_IMU->euler.yaw_d);
+    m_APT.rbCmd_dps = proportionalControl(aptParams.gains.heading.K_p, m_GDC_obj.m_GDC.headingCmd_d, m_IMU_obj.m_IMU.euler.yaw_d);
     break;
   case GDC::gdcYawMode::GYM_AZIMUTH:
     // implement azimuth to heading conversion if needed
     m_APT.rbCmd_dps = 0.0;
     break;
   case GDC::gdcYawMode::GYM_ACCEL:
-    m_APT.rbCmd_dps = proportionalControl(aptParams.gains.ny.K_p, m_GDC->nyCmd_B_fps2, m_IMU->states.specificForceY_fps2);
+    m_APT.rbCmd_dps = proportionalControl(aptParams.gains.ny.K_p, m_GDC_obj.m_GDC.nyCmd_B_fps2, m_IMU_obj.m_IMU.states.specificForceY_fps2);
     break;
   case GDC::gdcYawMode::GYM_YAWRATE:
-    m_APT.rbCmd_dps = m_GDC->yawRateCmd_dps;
+    m_APT.rbCmd_dps = m_GDC_obj.m_GDC.yawRateCmd_dps;
     break;
   default:
     m_APT.rbCmd_dps = 0.0;
   }
-  _prevYawState_e = m_GDC->yawMode_e;
+  _prevYawState_e = m_GDC_obj.m_GDC.yawMode_e;
 }
 
 void APT::yawInnerLoop()
 {
-  m_APT.rbDotCmd_dps2 = proportionalControl(aptParams.gains.yawRate.K_p, m_APT.rbCmd_dps, m_IMU->states.angularRateZ_dps);
+  m_APT.rbDotCmd_dps2 = proportionalControl(aptParams.gains.yawRate.K_p, m_APT.rbCmd_dps, m_IMU_obj.m_IMU.states.angularRateZ_dps);
 }
 
 void APT::speedMiddleLoop()
@@ -165,7 +158,7 @@ void APT::speedMiddleLoop()
 
 void APT::speedInnerLoop()
 {
-  m_APT.ubDotCmd_fps2 = m_GDC->throttleCmd_pct;
+  m_APT.ubDotCmd_fps2 = m_GDC_obj.m_GDC.throttleCmd_pct;
   m_APT.vbDotCmd_fps2 = 0.0;
   m_APT.wbDotCmd_fps2 = 0.0;
 }
@@ -234,7 +227,10 @@ void APT::setEffectors()
 {
   for (int ii = 0; ii < _nEffectors; ii++)
   {
-    pwm_val = aptParams.pwmMin[ii] + (m_APT.effectorCmd[ii] - aptParams.degMin[ii]) * (aptParams.pwmMax[ii] - aptParams.pwmMin[ii]) / (aptParams.degMax[ii] - aptParams.degMin[ii]);
+    double degRange = (aptParams.degMax[ii] - aptParams.degMin[ii]);
+    double pwmRange = static_cast<double>(aptParams.pwmMax[ii] - aptParams.pwmMin[ii]);
+    double normalized = (degRange == 0.0) ? 0.0 : (m_APT.effectorCmd[ii] - aptParams.degMin[ii]) / degRange;
+    pwm_val = aptParams.pwmMin[ii] + static_cast<int>(normalized * pwmRange);
     analogWrite(aptParams.effectorPins[ii], pwm_val);
   }
 }

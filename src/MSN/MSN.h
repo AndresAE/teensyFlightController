@@ -1,3 +1,6 @@
+#ifndef MSN_H
+#define MSN_H
+
 #include <cmath>
 #include <Arduino.h>
 #include "../Common/Common.h"
@@ -7,7 +10,7 @@
 class MSN
 {
 public:
-    MSN(int sampleRate_Hz);
+    MSN(int sampleRate_Hz, IMU &imu);
 
     enum fcsModeMissionPhase
     {
@@ -18,7 +21,6 @@ public:
     };
 
     fcsModeMissionPhase missionPhase_e = MSN_IDLE;
-    Config::msnParams msnParams = cfg.getMsnParams();
 
     int sampleRate_Hz;
     double dt_s;
@@ -31,12 +33,14 @@ public:
     void evaluateCruise();
     void evaluateLanding();
     void evaluateIdle();
-    void attachBus(IMU::busIMU *imuBus);
-
-    // pointers to external bus objects (set from main sketch)
-    IMU::busIMU *m_IMU = nullptr;
+    // attachBus removed: MSN holds reference to IMU object
+    IMU &m_IMU_obj;
 
 private:
     Config cfg;
+    const Config::msnParams &msnParams = cfg.getMsnParams();
     int _nxTakeoffDebounceCount = 0;
+    bool _busAttached_b = false;
 };
+
+#endif // MSN_H
