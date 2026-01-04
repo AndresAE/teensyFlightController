@@ -7,9 +7,9 @@ public:
     Config() {}
     struct fcsParams
     {
-        bool useTM_b = true;
+        bool useTM_b = false;
         int serialBaud = useTM_b ? 57600 : 9600;
-        int sampleRate_Hz = 10;
+        int sampleRate_Hz = 20;
         int tmDelay_ms = 5000;
     };
     struct busGains
@@ -43,12 +43,11 @@ public:
             {1.0, 0.0, 0.0, 0.0}}; // yawRate, k_p, k_i, k_f, k_antiWindup
         double effectorLimitHi[5] = {20.0, 20.0, 20.0, 20.0, 1.0};
         double effectorLimitLo[5] = {-20.0, -20.0, -20.0, -20.0, 0.0};
-        double effectorOffset[5] = {0.0, 0.0, 0.0, 0.0, 0.0};
-        double effectorPins[5] = {5, 6, 7, 8, 9};
-        int pwmMax[5] = {2000, 2000, 2000, 2000, 2000}; // microseconds
-        int pwmMin[5] = {1000, 1000, 1000, 1000, 1000}; // microseconds
-        double degMax[5] = {30.0, 30.0, 30.0, 30.0, 1.0};
-        double degMin[5] = {-30.0, -30.0, -30.0, -30.0, 0.0};
+        double effectorOffset[5] = {90.0, 90.0, 90.0, 90.0, 0.0};
+        int effectorPins[5] = {4, 5, 6, 7, 8};
+        int muMax_us[5] = {2500, 2500, 2500, 2500, 2000}; // microseconds
+        int muMin_us[5] = {500, 500, 500, 500, 1000};     // microseconds
+        double servoRange_d[5] = {180.0, 180.0, 180.0, 180.0, 1.0};
         double mixingRatioRotational[5][3] = {
             {1.0, 0.0, 0.1},   // left aileron (+LTED)
             {-1.0, 0.0, -0.1}, // right aileron (+RTEU)
@@ -93,7 +92,7 @@ public:
     struct gdcParams
     {
         int controlInPins[4] = {0, 1, 2, 3}; // roll, pitch, yaw, throttle
-        int controlInTimeOut_ms = 25000;     // 25 ms timeout
+        int controlInTimeOut_us = 25000;     // 25 ms timeout
         double pwmOffset_us[4] = {1500.0, 1770, 1500.0, 1100};
         double k_pwm[4] = {-0.15, 0.12, -0.02, 0.00125}; // scale factor from pwm to control input
         double controlInHiLimit[4] = {60, 16.0, 8.0, 1.0};

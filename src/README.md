@@ -15,7 +15,12 @@
 - [x] Add visualization tool
 - [x] add PyQtGraph capabilites to visualization
 - [x] recolor PyQtGraph
-- [] Check servos
+- [x] pinInterrupt for pulseIn
+- [x] pinInterup for servo commands
+- [x] Check servos
 - [x] Add config file for easy parameter changes
 - [x] check TM with new architecture
-- [] hardware abstraction layer to make IMU and GPS independent
+- [ ] hardware abstraction layer to make IMU, GPS, ans servo independent
+- [ ] zero protected divides, common?
+- [ ] initialize APT params based on effector size
+- [ ] initialize GDC cpp params based on input size

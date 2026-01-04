@@ -14,6 +14,13 @@ int now_ms;
 int dt_ms = 0;
 int endTime_ms = 0;
 
+struct busTime
+{
+  int startTime_ms;
+  int endTime_ms;
+  int deltaTime_ms;
+};
+
 Stream &chooseSerial()
 {
   if (fcsParams.useTM_b)
@@ -27,12 +34,12 @@ Stream &chooseSerial()
 }
 
 Stream &serialPort = chooseSerial();
-
 IMU imu(fcsParams.sampleRate_Hz);
 GPS gps;
 GDC gdc(fcsParams.sampleRate_Hz);
 MSN msn(fcsParams.sampleRate_Hz, imu);
 APT apt(fcsParams.sampleRate_Hz, gdc, imu);
+
 void setup()
 {
   if (fcsParams.useTM_b)

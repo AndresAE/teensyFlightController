@@ -198,19 +198,19 @@ void APT::controlAllocation()
 
   for (int ii = 0; ii < _nEffectors; ii++)
   {
-    m_APT.effectorCmd[ii] += aptParams.effectorOffset[ii];
     // apply limits and offsets
     if (m_APT.effectorCmd[ii] > aptParams.effectorLimitHi[ii])
     {
-      m_APT.effectorCmd[ii] = aptParams.effectorLimitHi[ii] + aptParams.effectorOffset[ii];
+      m_APT.effectorCmd[ii] = aptParams.effectorLimitHi[ii];
     }
     else if (m_APT.effectorCmd[ii] < aptParams.effectorLimitLo[ii])
     {
-      m_APT.effectorCmd[ii] = aptParams.effectorLimitLo[ii] + aptParams.effectorOffset[ii];
+      m_APT.effectorCmd[ii] = aptParams.effectorLimitLo[ii];
     }
     else
     {
     }
+    m_APT.effectorCmd[ii] += aptParams.effectorOffset[ii];
   }
 }
 
@@ -219,19 +219,31 @@ void APT::setupEffectors()
   _nEffectors = static_cast<int>(sizeof(m_APT.effectorCmd) / sizeof(m_APT.effectorCmd[0]));
   for (int ii = 0; ii < _nEffectors; ii++)
   {
-    analogWriteFrequency(aptParams.effectorPins[ii], sampleRate_Hz);
+    pinMode(aptParams.effectorPins[ii], OUTPUT);
   }
 }
 
 void APT::setEffectors()
 {
+  _effectorStartTime_us = micros();
+  _loopTime_us = 0.0;
   for (int ii = 0; ii < _nEffectors; ii++)
   {
-    double degRange = (aptParams.degMax[ii] - aptParams.degMin[ii]);
-    double pwmRange = static_cast<double>(aptParams.pwmMax[ii] - aptParams.pwmMin[ii]);
-    double normalized = (degRange == 0.0) ? 0.0 : (m_APT.effectorCmd[ii] - aptParams.degMin[ii]) / degRange;
-    pwm_val = aptParams.pwmMin[ii] + static_cast<int>(normalized * pwmRange);
-    analogWrite(aptParams.effectorPins[ii], pwm_val);
+    _effectorDelay_us[ii] = (m_APT.effectorCmd[ii] / aptParams.servoRange_d[ii]) * (aptParams.muMax_us[ii] - aptParams.muMin_us[ii]) + aptParams.muMin_us[ii];
+    digitalWrite(aptParams.effectorPins[ii], HIGH);
+    _effectorSet_b[ii] = true;
+  }
+  while (_loopTime_us < _frame_us)
+  {
+    for (int ii = 0; ii < _nEffectors; ii++)
+    {
+      if ((_loopTime_us >= _effectorDelay_us[ii]) & _effectorSet_b[ii])
+      {
+        digitalWrite(aptParams.effectorPins[ii], LOW);
+        _effectorSet_b[ii] = false;
+      }
+    }
+    _loopTime_us = micros() - _effectorStartTime_us;
   }
 }
 

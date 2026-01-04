@@ -15,7 +15,6 @@ public:
 
   int sampleRate_Hz;
   double dt_s;
-  int pwm_val;
   double integralError = 0.0;
   double wBI_B_dps2[3];
   double aBI_B_fps2[3];
@@ -37,7 +36,6 @@ public:
   double proportionalControl(double k_p, double cvc, double cv);
   double proportionalIntegralControl(double k_p, double k_i, double cvc, double cv, bool resetIntegral_b);
   double proportionalIntegralFeedforwardControl(double k_p, double k_i, double k_f, double cvc, double cv, bool resetIntegral_b);
-  // attachBus removed: APT holds references to GDC and IMU objects
 
   struct busAPT
   {
@@ -77,6 +75,11 @@ private:
   int _nEffectors;
   int _nRotationalAxes = 3;
   int _nLinearAxes = 3;
+  int _frame_us = 20000;
+  int _effectorDelay_us[5];
+  bool _effectorSet_b[5] = {false, false, false, false, false};
+  int _effectorStartTime_us;
+  int _loopTime_us;
 };
 
 #endif // APT_H
