@@ -9,7 +9,7 @@ public:
     {
         bool useTM_b = false;
         int serialBaud = useTM_b ? 57600 : 9600;
-        int sampleRate_Hz = 20;
+        int sampleRate_Hz = 50;
         int tmDelay_ms = 5000;
     };
     struct busGains
@@ -49,10 +49,10 @@ public:
         int muMin_us[5] = {500, 500, 500, 500, 1000};     // microseconds
         double servoRange_d[5] = {180.0, 180.0, 180.0, 180.0, 1.0};
         double mixingRatioRotational[5][3] = {
-            {1.0, 0.0, 0.1},   // left aileron (+LTED)
+            {1.0, 0.0, 0.3},   // left aileron (+LTED)
             {-1.0, 0.0, -0.1}, // right aileron (+RTEU)
             {0.0, 1.0, 0.0},   // elevator (+TEU)
-            {0.1, 0.0, 1.0},   // rudder (+TER)
+            {0.6, 0.0, 2.0},   // rudder (+TER)
             {0.0, 0.0, 0.0}    // throttle
         };
         double mixingRatioLinear[5][3] = {

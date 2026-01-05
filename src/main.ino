@@ -14,13 +14,6 @@ int now_ms;
 int dt_ms = 0;
 int endTime_ms = 0;
 
-struct busTime
-{
-  int startTime_ms;
-  int endTime_ms;
-  int deltaTime_ms;
-};
-
 Stream &chooseSerial()
 {
   if (fcsParams.useTM_b)

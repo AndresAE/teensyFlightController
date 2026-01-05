@@ -3,6 +3,7 @@
 
 #include <cmath>
 #include <Arduino.h>
+#include <Servo.h>
 #include "../Common/Common.h"
 #include "../GDC/GDC.h"
 #include "../IMU/IMU.h"
@@ -76,10 +77,8 @@ private:
   int _nRotationalAxes = 3;
   int _nLinearAxes = 3;
   int _frame_us = 20000;
-  int _effectorDelay_us[5];
-  bool _effectorSet_b[5] = {false, false, false, false, false};
-  int _effectorStartTime_us;
   int _loopTime_us;
+  Servo _servos[5];
 };
 
 #endif // APT_H

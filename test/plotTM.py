@@ -241,7 +241,7 @@ def update():
 # ============================================================
 
 # open serial port used by update()
-stream_ser = open_serial("COM6", 9600)
+stream_ser = open_serial("COM3", 57600)
 
 # use a Qt timer to call update periodically
 timer = QtCore.QTimer()

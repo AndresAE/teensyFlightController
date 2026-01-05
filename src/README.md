@@ -24,3 +24,4 @@
 - [ ] zero protected divides, common?
 - [ ] initialize APT params based on effector size
 - [ ] initialize GDC cpp params based on input size
+- [ ] kalman filter for bad intermittent GPS

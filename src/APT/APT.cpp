@@ -219,31 +219,24 @@ void APT::setupEffectors()
   _nEffectors = static_cast<int>(sizeof(m_APT.effectorCmd) / sizeof(m_APT.effectorCmd[0]));
   for (int ii = 0; ii < _nEffectors; ii++)
   {
-    pinMode(aptParams.effectorPins[ii], OUTPUT);
+    // attach servo to pin and initialize to offset position
+    _servos[ii].attach(aptParams.effectorPins[ii]);
+    int init_us = static_cast<int>((aptParams.effectorOffset[ii] / aptParams.servoRange_d[ii]) *
+                                       (aptParams.muMax_us[ii] - aptParams.muMin_us[ii]) +
+                                   aptParams.muMin_us[ii]);
+    _servos[ii].writeMicroseconds(init_us);
   }
 }
 
 void APT::setEffectors()
 {
-  _effectorStartTime_us = micros();
-  _loopTime_us = 0.0;
+  // Compute pulse widths (microseconds) and write to servos (non-blocking)
   for (int ii = 0; ii < _nEffectors; ii++)
   {
-    _effectorDelay_us[ii] = (m_APT.effectorCmd[ii] / aptParams.servoRange_d[ii]) * (aptParams.muMax_us[ii] - aptParams.muMin_us[ii]) + aptParams.muMin_us[ii];
-    digitalWrite(aptParams.effectorPins[ii], HIGH);
-    _effectorSet_b[ii] = true;
-  }
-  while (_loopTime_us < _frame_us)
-  {
-    for (int ii = 0; ii < _nEffectors; ii++)
-    {
-      if ((_loopTime_us >= _effectorDelay_us[ii]) & _effectorSet_b[ii])
-      {
-        digitalWrite(aptParams.effectorPins[ii], LOW);
-        _effectorSet_b[ii] = false;
-      }
-    }
-    _loopTime_us = micros() - _effectorStartTime_us;
+    int pulse_us = static_cast<int>((m_APT.effectorCmd[ii] / aptParams.servoRange_d[ii]) *
+                                        (aptParams.muMax_us[ii] - aptParams.muMin_us[ii]) +
+                                    aptParams.muMin_us[ii]);
+    _servos[ii].writeMicroseconds(pulse_us);
   }
 }
 
