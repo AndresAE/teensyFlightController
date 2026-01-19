@@ -33,13 +33,28 @@ public:
         double hae_ft;
     };
 
+    struct matrix
+    {
+        int rows;
+        int cols;
+        float m[10][10]; // max size, but you only use rows×cols
+    };
+
     // common methods
     double norm(double x, double y, double z);
     double calcAlpha(double cutoff_Hz, double dt_s);
     double trapIntegral(double x, double x_prev, double y, double dt_s);
     double lowPassFilter(double x, double x_prev, double alpha);
     double primeVerticalRadiusOfCurvature(double latG_d);
+
+    matrix matrixMultiply(matrix A, matrix B);
+    matrix matrixAdd(matrix A, matrix B);
+    matrix matrixAdd(matrix A, matrix B, bool negate_b = false);
+    matrix matrixTranspose(matrix A);
+    matrix matrixInverse(matrix A);
+    matrix crossProductMatrix(matrix A, matrix B);
     busEcef lla2ecef(busLLA lla_ddft);
+    busLLA ecef2lla(busEcef ecef_ft);
 
 private:
     double x, y, z;

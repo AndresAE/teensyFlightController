@@ -20,7 +20,7 @@ public:
   {
     Common::busLLA lla_ddft;
     Common::busEcef ecef_ft;
-    double time_s;
+    int timeStamp_ms;
     int fixQuality;
     int nSatellites;
     double hdop;
@@ -28,7 +28,7 @@ public:
 
   Common::busLLA m_LLA = {0.0, 0.0, 0.0};
   Common::busEcef m_ECEF = {0.0, 0.0, 0.0};
-  busGPS m_GPS = {m_LLA, m_ECEF, 0.0, 0, 0, 0.0};
+  busGPS m_GPS = {m_LLA, m_ECEF, 0, 0, 0, 0.0};
 
 private:
   Common C;

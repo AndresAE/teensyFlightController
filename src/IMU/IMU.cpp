@@ -5,6 +5,18 @@ IMU::IMU(int sampleRate_Hz, double yaw0_d)
     : sampleRate_Hz(sampleRate_Hz), yaw0_d(yaw0_d), imuParams(cfg.getImuParams())
 {
   dt_s = 1 / static_cast<double>(sampleRate_Hz);
+  switch (imuParams.hardwareType)
+  {
+  case imuType::IMU_TEYLETEN:
+    _bnoAddress = 0x29;
+    break;
+  case imuType::IMU_ADAFRUIT:
+    _bnoAddress = 0x28;
+    break;
+  default:
+    _bnoAddress = 0x28;
+    break;
+  }
 }
 
 void IMU::begin()

@@ -1,6 +1,9 @@
 import serial
+import threading
+import queue
 import time
 import re
+import traceback
 from collections import deque
 import numpy as np
 import pyqtgraph as pg
@@ -55,6 +58,7 @@ def parse_group_line(line):
 # ============================================================
 
 def read_lines_from_serial(ser):
+    # legacy function kept for compatibility; prefer using the background reader queue
     lines = []
     # read all available lines (non-blocking because timeout=0)
     while True:
@@ -67,6 +71,47 @@ def read_lines_from_serial(ser):
             continue
         if line:
             lines.append((time.time(), line))
+    return lines
+
+
+# ------------------------
+# Background serial reader
+# ------------------------
+line_queue = queue.Queue()
+serial_stop_event = threading.Event()
+
+def serial_reader_thread(port, baud, q, stop_event):
+    try:
+        ser = serial.Serial(port, baud, timeout=0.2)
+    except Exception:
+        print(f"serial_reader_thread: could not open {port} @{baud}")
+        return
+    while not stop_event.is_set():
+        try:
+            raw = ser.readline()
+        except Exception:
+            break
+        if not raw:
+            continue
+        try:
+            line = raw.decode("utf-8", errors="ignore").strip()
+        except Exception:
+            continue
+        if line:
+            q.put((time.time(), line))
+    try:
+        ser.close()
+    except Exception:
+        pass
+
+def drain_line_queue():
+    lines = []
+    while True:
+        try:
+            item = line_queue.get_nowait()
+        except queue.Empty:
+            break
+        lines.append(item)
     return lines
 
 
@@ -107,6 +152,10 @@ history = {
     "ny": deque(maxlen=MAX_POINTS),
     "nz": deque(maxlen=MAX_POINTS),
     "throttle": deque(maxlen=MAX_POINTS),
+    "gx": deque(maxlen=MAX_POINTS),
+    "gy": deque(maxlen=MAX_POINTS),
+    "gz": deque(maxlen=MAX_POINTS),
+    "alt": deque(maxlen=MAX_POINTS),
     "lat": deque(maxlen=MAX_POINTS),
     "lon": deque(maxlen=MAX_POINTS),
 }
@@ -122,6 +171,9 @@ def append_block(block):
     history["ax"].append(imu.get("ax_fps2", np.nan))
     history["ay"].append(imu.get("ay_fps2", np.nan))
     history["az"].append(imu.get("az_fps2", np.nan))
+    history["gx"].append(imu.get("gx_dps", np.nan))
+    history["gy"].append(imu.get("gy_dps", np.nan))
+    history["gz"].append(imu.get("gz_dps", np.nan))
     history["roll"].append(imu.get("roll_d", np.nan))
     history["pitch"].append(imu.get("pitch_d", np.nan))
     history["yaw"].append(imu.get("yaw_d", np.nan))
@@ -131,6 +183,8 @@ def append_block(block):
     history["throttle"].append(gdc.get("throttleCmd_pct", np.nan))
     history["lat"].append(gps.get("latG_d", np.nan))
     history["lon"].append(gps.get("lon_d", np.nan))
+    # GPS altitude (Height Above Ellipsoid) in feet in telemetry logs
+    history["alt"].append(gps.get("HAE_ft", np.nan))
 
 
 # ============================================================
@@ -139,109 +193,186 @@ def append_block(block):
 
 app = QtWidgets.QApplication([])
 win = pg.GraphicsLayoutWidget(show=True, title="Telemetry")
-win.resize(1000, 800)
+win.resize(1100, 900)
 
-ax_imu = win.addPlot(row=0, col=0, title="IMU Accelerations (fps²)")
-ax_imu.showGrid(x=True, y=True)
-ax_imu.addLegend()
-# distinct colors for ax, ay, az
-imu_colors = ("r", "g", "b")
-imu_lines = [ax_imu.plot(pen=pg.mkPen(color=c, width=1), name=l) for l, c in zip(("ax", "ay", "az"), imu_colors)]
-
-ax_euler = win.addPlot(row=1, col=0, title="Euler Angles")
+# Left column: Euler, Gyros, Accelerations (strip charts)
+ax_euler = win.addPlot(row=0, col=0, title="Euler Angles (deg)")
 ax_euler.showGrid(x=True, y=True)
 ax_euler.addLegend()
-# distinct colors for roll, pitch, yaw
 euler_colors = ("m", "y", "c")
 euler_lines = [ax_euler.plot(pen=pg.mkPen(color=c, width=1), name=l) for l, c in zip(("roll", "pitch", "yaw"), euler_colors)]
 
-ax_gdc = win.addPlot(row=2, col=0, title="GDC Commands")
+ax_gyro = win.addPlot(row=1, col=0, title="Gyros (deg/s)")
+ax_gyro.showGrid(x=True, y=True)
+ax_gyro.addLegend()
+gyro_colors = ("#1f77b4", "#ff7f0e", "#2ca02c")
+gyro_lines = [ax_gyro.plot(pen=pg.mkPen(color=c, width=1), name=l) for l, c in zip(("gx", "gy", "gz"), gyro_colors)]
+
+ax_accel = win.addPlot(row=2, col=0, title="Accelerations (fps²)")
+ax_accel.showGrid(x=True, y=True)
+ax_accel.addLegend()
+accel_colors = ("r", "g", "b")
+accel_lines = [ax_accel.plot(pen=pg.mkPen(color=c, width=1), name=l) for l, c in zip(("ax", "ay", "az"), accel_colors)]
+
+# Right column: GPS lat/lon/alt (strip charts) and GDC commands
+ax_lat = win.addPlot(row=0, col=1, title="Latitude (deg)")
+ax_lat.showGrid(x=True, y=True)
+lat_line = ax_lat.plot(pen=pg.mkPen(color="#003f5c", width=1), name="lat")
+
+ax_lon = win.addPlot(row=1, col=1, title="Longitude (deg)")
+ax_lon.showGrid(x=True, y=True)
+lon_line = ax_lon.plot(pen=pg.mkPen(color="#2f4b7c", width=1), name="lon")
+
+ax_alt = win.addPlot(row=2, col=1, title="Altitude (ft)")
+ax_alt.showGrid(x=True, y=True)
+alt_line = ax_alt.plot(pen=pg.mkPen(color="#665191", width=1), name="alt")
+
+ax_gdc = win.addPlot(row=3, col=1, title="GDC Commands")
 ax_gdc.showGrid(x=True, y=True)
 ax_gdc.addLegend()
-# distinct colors for gdc lines: pb, ny, nz, throttle
 gdc_colors = ("#d62728", "#ff7f0e", "#2ca02c", "#9467bd")
 gdc_lines = [ax_gdc.plot(pen=pg.mkPen(color=c, width=1), name=l) for l, c in zip(("pbCmd_dps", "nyCmd", "nzCmd", "throttle"), gdc_colors)]
-
-ax_gps = win.addPlot(row=3, col=0, title="GPS Track")
-ax_gps.showGrid(x=True, y=True)
-gps_scatter = pg.ScatterPlotItem(size=6, brush=pg.mkBrush(100, 100, 255, 150))
-ax_gps.addItem(gps_scatter)
 
 frame_count = 0
 Y_RECALC_PERIOD = 10  # recalc y-limits every N frames
 TIME_WINDOW_S = 10.0  # fixed time window (seconds) to show
+updating = False
+skip_count = 0
 
 
 def update():
-    global frame_count
-    # read all available lines from serial
-    lines = read_lines_from_serial(stream_ser)
-    if not lines:
+    global frame_count, updating, skip_count
+    if updating:
+        skip_count += 1
         return
-    blocks = read_message_block_from_lines(lines)
-    for b in blocks:
-        append_block(b)
+    updating = True
+    try:
+        # read all available lines from background reader queue
+        lines = drain_line_queue()
+        blocks = []
+        if lines:
+            blocks = read_message_block_from_lines(lines)
+        for b in blocks:
+            append_block(b)
 
-    t = np.array(history["t"])
-    if t.size == 0:
-        return
+        t = np.array(history["t"])
+        # If we don't have any telemetry yet, set axes to a moving window
+        if t.size == 0:
+            now = time.time()
+            t0 = now - TIME_WINDOW_S
+            # set x-range on all axes so the UI keeps moving even with no data
+            for axp in (ax_accel, ax_gyro, ax_euler, ax_gdc, ax_lat, ax_lon, ax_alt):
+                axp.setXRange(t0, now, padding=0)
+            # diagnostic queue size occasionally
+            if frame_count % 200 == 0:
+                try:
+                    print(f"no-data: queue_size={line_queue.qsize()} skip_count={skip_count}")
+                except Exception:
+                    pass
+            frame_count += 1
+            return
+        else:
+            t0 = time.time() - TIME_WINDOW_S
+        # accelerations
+        ax_vals = np.array(history["ax"])
+        ay_vals = np.array(history["ay"])
+        az_vals = np.array(history["az"])
+        for line, vals in zip(accel_lines, (ax_vals, ay_vals, az_vals)):
+            line.setData(t, vals)
+        ax_accel.setXRange(max(t[0], t0), t[-1], padding=0)
 
-    t0 = t[-1] - TIME_WINDOW_S
+        # gyros
+        gx = np.array(history["gx"])
+        gy = np.array(history["gy"])
+        gz = np.array(history["gz"])
+        for line, vals in zip(gyro_lines, (gx, gy, gz)):
+            line.setData(t, vals)
+        ax_gyro.setXRange(max(t[0], t0), t[-1], padding=0)
 
-    ax_vals = np.array(history["ax"])
-    ay_vals = np.array(history["ay"])
-    az_vals = np.array(history["az"])
+        # euler
+        roll = np.array(history["roll"])
+        pitch = np.array(history["pitch"])
+        yaw = np.array(history["yaw"])
+        for line, vals in zip(euler_lines, (roll, pitch, yaw)):
+            line.setData(t, vals)
+        ax_euler.setXRange(max(t[0], t0), t[-1], padding=0)
 
-    # update curves (pyqtgraph expects x,y arrays)
-    for line, vals in zip(imu_lines, (ax_vals, ay_vals, az_vals)):
-        line.setData(t, vals)
-    ax_imu.setXRange(max(t[0], t0), t[-1], padding=0)
+        # GDC commands
+        pb = np.array(history["pb"])
+        ny = np.array(history["ny"])
+        nz = np.array(history["nz"])
+        throttle = np.array(history["throttle"])
+        for line, vals in zip(gdc_lines, (pb, ny, nz, throttle)):
+            line.setData(t, vals)
+        ax_gdc.setXRange(max(t[0], t0), t[-1], padding=0)
 
-    roll = np.array(history["roll"])
-    pitch = np.array(history["pitch"])
-    yaw = np.array(history["yaw"])
-    for line, vals in zip(euler_lines, (roll, pitch, yaw)):
-        line.setData(t, vals)
-    ax_euler.setXRange(max(t[0], t0), t[-1], padding=0)
+        # GPS lat/lon/alt as strip charts
+        lat = np.array(history["lat"])
+        lon = np.array(history["lon"])
+        alt = np.array(history["alt"])
+        lat_line.setData(t, lat)
+        lon_line.setData(t, lon)
+        alt_line.setData(t, alt)
+        ax_lat.setXRange(max(t[0], t0), t[-1], padding=0)
+        ax_lon.setXRange(max(t[0], t0), t[-1], padding=0)
+        ax_alt.setXRange(max(t[0], t0), t[-1], padding=0)
 
-    pb = np.array(history["pb"])
-    ny = np.array(history["ny"])
-    nz = np.array(history["nz"])
-    throttle = np.array(history["throttle"])
-    for line, vals in zip(gdc_lines, (pb, ny, nz, throttle)):
-        line.setData(t, vals)
-    ax_gdc.setXRange(max(t[0], t0), t[-1], padding=0)
+        # recalc y-limits periodically for all multi-line axes
+        if frame_count % Y_RECALC_PERIOD == 0:
+            axes_and_arrays = [
+                (ax_accel, (ax_vals, ay_vals, az_vals)),
+                (ax_gyro, (gx, gy, gz)),
+                (ax_euler, (roll, pitch, yaw)),
+                (ax_gdc, (pb, ny, nz, throttle)),
+                (ax_lat, (lat,)),
+                (ax_lon, (lon,)),
+                (ax_alt, (alt,)),
+            ]
+            for axp, arrays in axes_and_arrays:
+                try:
+                    # ensure arrays are same-length and non-empty
+                    arrays = [np.asarray(a) for a in arrays]
+                    if not arrays:
+                        continue
+                    sizes = [a.size for a in arrays]
+                    if not any(sizes):
+                        continue
+                    # if sizes differ, skip y autoscale for that axis this frame
+                    if len(set(sizes)) != 1:
+                        continue
+                    stacked = np.vstack(arrays)
+                    if np.isfinite(stacked).any():
+                        vmin = np.nanmin(stacked)
+                        vmax = np.nanmax(stacked)
+                        if vmin == vmax:
+                            vmin -= 0.5
+                            vmax += 0.5
+                        axp.setYRange(vmin, vmax, padding=0)
+                except Exception:
+                    print("y-range calc error:")
+                    traceback.print_exc()
 
-    lat = np.array(history["lat"])
-    lon = np.array(history["lon"])
-    if lat.size:
-        pts = np.column_stack((lon, lat))
-        spots = [{'pos': p} for p in pts]
-        gps_scatter.setData(spots)
-
-    # recalc y-limits periodically
-    if frame_count % Y_RECALC_PERIOD == 0:
-        for ax, arrays in ((ax_imu, (ax_vals, ay_vals, az_vals)),
-                           (ax_euler, (roll, pitch, yaw)),
-                           (ax_gdc, (pb, ny, nz, throttle))):
-            stacked = np.vstack([a for a in arrays])
-            if np.isfinite(stacked).any():
-                vmin = np.nanmin(stacked)
-                vmax = np.nanmax(stacked)
-                if vmin == vmax:
-                    vmin -= 0.5
-                    vmax += 0.5
-                ax.setYRange(vmin, vmax, padding=0)
-
-    frame_count += 1
+        frame_count += 1
+    except Exception:
+        print("update error:")
+        traceback.print_exc()
+    finally:
+        updating = False
 
 
 # ============================================================
 # MAIN
 # ============================================================
 
-# open serial port used by update()
-stream_ser = open_serial("COM3", 57600)
+# start background serial reader thread (reads serial and enqueues lines)
+serial_thread = threading.Thread(target=serial_reader_thread, args=("COM3", 57600, line_queue, serial_stop_event), daemon=True)
+serial_thread.start()
+
+# ensure background thread stops when the Qt app exits
+def _stop_serial():
+    serial_stop_event.set()
+
+app.aboutToQuit.connect(_stop_serial)
 
 # use a Qt timer to call update periodically
 timer = QtCore.QTimer()

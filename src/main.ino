@@ -18,7 +18,7 @@ Stream &chooseSerial()
 {
   if (fcsParams.useTM_b)
   {
-    return Serial5;
+    return Serial1;
   }
   else
   {
@@ -37,7 +37,7 @@ void setup()
 {
   if (fcsParams.useTM_b)
   {
-    Serial5.begin(fcsParams.serialBaud);
+    Serial1.begin(fcsParams.serialBaud);
 
     serialPort.println("----- Holding for TM -----");
     delay(fcsParams.tmDelay_ms);

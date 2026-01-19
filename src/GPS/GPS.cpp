@@ -57,7 +57,7 @@ void GPS::processGNGGA(String s)
   m_GPS = {
       m_LLA,
       m_ECEF,
-      0.0,
+      static_cast<int>(millis()),
       fields[6].toInt(),
       fields[7].toInt(),
       fields[8].toFloat()};

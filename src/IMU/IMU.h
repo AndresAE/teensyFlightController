@@ -23,6 +23,15 @@ public:
   void initializeRotMatrix();
   void rotateRaw();
 
+  // enum definitions
+  enum imuType
+  {
+    IMU_ADAFRUIT = 0,
+    IMU_TEYLETEN = 1,
+    IMU_MPU6050 = 2,
+    IMU_MPU9250 = 3
+  };
+
   // bus definitions
   struct busStates
   {
@@ -80,12 +89,13 @@ private:
 
   double _cX, _sX, _cY, _sY, _cZ, _sZ;
 
-#define BNO055_ADDRESS 0x28
-#define BNO055_OPR_MODE 0x3D
-#define BNO055_PWR_MODE 0x3E
-#define BNO055_PAGE_ID 0x07
-#define BNO055_ACCEL_DATA_X_LSB 0x08
-#define BNO055_GYRO_DATA_X_LSB 0x14
+  int8_t _bnoAddress;
+  int8_t BNO055_ADDRESS = _bnoAddress;
+  int8_t BNO055_OPR_MODE = 0x3D;
+  int8_t BNO055_PWR_MODE = 0x3E;
+  int8_t BNO055_PAGE_ID = 0x07;
+  int8_t BNO055_ACCEL_DATA_X_LSB = 0x08;
+  int8_t BNO055_GYRO_DATA_X_LSB = 0x14;
 };
 
 #endif // IMU_H
