@@ -7,7 +7,7 @@ public:
     Config() {}
     struct fcsParams
     {
-        bool useTM_b = true;
+        bool useTM_b = false;
         int serialBaud = useTM_b ? 57600 : 9600;
         int sampleRate_Hz = 50;
         int tmDelay_ms = 5000;
@@ -68,12 +68,11 @@ public:
         int imu_baud = 115200;
         int boot_time_ms = 2000;
         int nInit = 100;
-        int hardwareType = 1; // 0=ADAFRUIT, 1=TEYLETEN, 2=MPU6050, 3=MPU9250
         double accel_LSB = 0.00981;
         double gyro_LSB = 0.0625;
         double xRot_d = 180.0;
         double yRot_d = 0.0;
-        double zRot_d = 0.0;
+        double zRot_d = -90.0;
         double cutoffAx_Hz = 5.0;
         double cutoffAy_Hz = 5.0;
         double cutoffAz_Hz = 5.0;

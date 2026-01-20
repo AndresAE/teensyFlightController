@@ -89,8 +89,7 @@ private:
 
   double _cX, _sX, _cY, _sY, _cZ, _sZ;
 
-  int8_t _bnoAddress;
-  int8_t BNO055_ADDRESS = _bnoAddress;
+  int8_t BNO055_ADDRESS = 0x29;
   int8_t BNO055_OPR_MODE = 0x3D;
   int8_t BNO055_PWR_MODE = 0x3E;
   int8_t BNO055_PAGE_ID = 0x07;

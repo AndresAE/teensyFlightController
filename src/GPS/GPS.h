@@ -20,7 +20,7 @@ public:
   {
     Common::busLLA lla_ddft;
     Common::busEcef ecef_ft;
-    int timeStamp_ms;
+    double timeStamp_s;
     int fixQuality;
     int nSatellites;
     double hdop;

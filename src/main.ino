@@ -8,8 +8,7 @@
 
 Config cfg;
 Config::fcsParams fcsParams = cfg.getFcsParams();
-int next100HzTask = 0;
-int next10HzTask = 0;
+int nextTask_ms = 0;
 int now_ms;
 int dt_ms = 0;
 int endTime_ms = 0;
@@ -54,25 +53,26 @@ void setup()
   gps.begin();
   serialPort.println("----- Starting GDC -----");
   gdc.begin();
+  gps.step();
   serialPort.println("----- Starting APT -----");
   apt.begin();
 
   dt_ms = static_cast<int>(1000 / fcsParams.sampleRate_Hz);
-  next100HzTask = millis() + dt_ms;
+  nextTask_ms = millis() + dt_ms;
 }
 
 void loop()
 {
   now_ms = millis();
-  if (now_ms >= next100HzTask)
+  if (now_ms >= nextTask_ms)
   {
     msn.step();
     imu.step();
-    gps.step();
     gdc.step();
     apt.step();
+    gps.step();
     endTime_ms = millis();
     printStatus(serialPort, now_ms, endTime_ms, msn, imu, gps, gdc, apt);
-    next100HzTask += dt_ms;
+    nextTask_ms += dt_ms;
   };
 };

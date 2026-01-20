@@ -48,7 +48,9 @@ void printStatus(Stream &serialPort, int now_ms, int endTime_ms, MSN &msn, IMU &
     {
         String s;
         s.reserve(160);
-        s += "gps: latG_d=";
+        s += "gps: timeStamp_s=";
+        s += String(gps.m_GPS.timeStamp_s);
+        s += ", latG_d=";
         s += String(gps.m_GPS.lla_ddft.latG_d);
         s += ", lon_d=";
         s += String(gps.m_GPS.lla_ddft.lon_d);
