@@ -81,7 +81,7 @@ Common::matrix Common::matrixMultiply(Common::matrix A, Common::matrix B)
   return mat;
 }
 
-Common::matrix Common::matrixAdd(Common::matrix A, Common::matrix B, bool negate_B)
+Common::matrix Common::matrixAdd(Common::matrix A, Common::matrix B, bool negate_b)
 {
   Common::matrix R;
   R.rows = A.rows;
@@ -90,7 +90,7 @@ Common::matrix Common::matrixAdd(Common::matrix A, Common::matrix B, bool negate
   {
     for (int j = 0; j < A.cols; j++)
     {
-      if (negate_B)
+      if (negate_b)
       {
         R.m[i][j] = A.m[i][j] - B.m[i][j];
       }
@@ -101,11 +101,6 @@ Common::matrix Common::matrixAdd(Common::matrix A, Common::matrix B, bool negate
     }
   }
   return R;
-}
-
-Common::matrix Common::matrixAdd(Common::matrix A, Common::matrix B)
-{
-  return Common::matrixAdd(A, B, false);
 }
 
 Common::matrix Common::matrixTranspose(Common::matrix A)

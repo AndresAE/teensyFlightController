@@ -3,6 +3,7 @@
 
 #include <cmath>
 #include <Arduino.h>
+#include <cstdint>
 #include "../Common/Common.h"
 #include "../config/config.h"
 
@@ -40,6 +41,7 @@ private:
   double convertToDecimalDegrees(String raw, String dir);
   void splitNMEA(String s, String *fields, int maxFields);
   void processGNGGA(String s);
+  void sendUBX(const uint8_t *msg, uint8_t len);
 };
 
 #endif // GPS_H

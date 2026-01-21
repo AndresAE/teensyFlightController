@@ -1,6 +1,6 @@
 #include "Status.h"
 
-void printStatus(Stream &serialPort, int now_ms, int endTime_ms, MSN &msn, IMU &imu, GPS &gps, GDC &gdc, APT &apt)
+void printStatus(Stream &serialPort, int now_ms, int endTime_ms, MSN &msn, IMU &imu, GPS &gps, NAV &nav, GDC &gdc, APT &apt)
 {
     // print status to serial port (grouped to reduce calls)
 
@@ -68,6 +68,19 @@ void printStatus(Stream &serialPort, int now_ms, int endTime_ms, MSN &msn, IMU &
         s += String(gps.m_GPS.nSatellites);
         s += ", HDOP=";
         s += String(gps.m_GPS.hdop);
+        serialPort.println(s);
+    }
+
+    // nav block
+    {
+        String s;
+        s.reserve(160);
+        s += "nav: uB_fps=";
+        s += String(nav.m_NAV.u_fps2);
+        s += ", vB_fps=";
+        s += String(nav.m_NAV.v_fps2);
+        s += ", wB_fps=";
+        s += String(nav.m_NAV.w_fps2);
         serialPort.println(s);
     }
 

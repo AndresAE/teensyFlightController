@@ -1,6 +1,7 @@
 #include "MSN/MSN.h"
 #include "IMU/IMU.h"
 #include "GPS/GPS.h"
+#include "NAV/NAV.h"
 #include "GDC/GDC.h"
 #include "APT/APT.h"
 #include "Config/config.h"
@@ -28,6 +29,7 @@ Stream &chooseSerial()
 Stream &serialPort = chooseSerial();
 IMU imu(fcsParams.sampleRate_Hz);
 GPS gps;
+NAV nav(fcsParams.sampleRate_Hz, imu, gps);
 GDC gdc(fcsParams.sampleRate_Hz);
 MSN msn(fcsParams.sampleRate_Hz, imu);
 APT apt(fcsParams.sampleRate_Hz, gdc, imu);
@@ -51,6 +53,7 @@ void setup()
   serialPort.println("----- Starting NAV -----");
   imu.begin();
   gps.begin();
+  nav.begin();
   serialPort.println("----- Starting GDC -----");
   gdc.begin();
   gps.step();
@@ -71,8 +74,9 @@ void loop()
     gdc.step();
     apt.step();
     gps.step();
+    nav.step();
     endTime_ms = millis();
-    printStatus(serialPort, now_ms, endTime_ms, msn, imu, gps, gdc, apt);
+    printStatus(serialPort, now_ms, endTime_ms, msn, imu, gps, nav, gdc, apt);
     nextTask_ms += dt_ms;
   };
 };

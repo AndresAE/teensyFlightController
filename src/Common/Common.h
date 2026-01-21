@@ -48,7 +48,6 @@ public:
     double primeVerticalRadiusOfCurvature(double latG_d);
 
     matrix matrixMultiply(matrix A, matrix B);
-    matrix matrixAdd(matrix A, matrix B);
     matrix matrixAdd(matrix A, matrix B, bool negate_b = false);
     matrix matrixTranspose(matrix A);
     matrix matrixInverse(matrix A);
