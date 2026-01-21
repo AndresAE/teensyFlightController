@@ -1,11 +1,13 @@
-![image not loaded](../doc/Stability_vs_Body_Axis.png)
+![image not loaded](../doc/teensyFlightControlPic.png)
 
 # flightControlTeensy
 
 ## 6DOF Flight Controller for use with:
 - Teensy 4.0
-- BNO 005
-- Adafruit GPS Breakout v3
+- BNO005 6 axis IMU
+- NEO 6 GPS
+- Inputs (PWM)
+- Servos (PWM)
 - Telemetry Radio (optional hardwire)
 
 ## To-Do:
@@ -24,11 +26,15 @@
 - [ ] zero protected divides, common?
 - [ ] initialize APT params based on effector size
 - [ ] initialize GDC cpp params based on input size
-- [c] kalman filter for bad intermittent GPS
+- [x] kalman filter for bad intermittent GPS
 - [ ] time of validity for IMU, GPS, GDC commands
-- [ ] 'Direct' law for GDC commands
+- [x] 'Direct' law for GDC commands
 - [ ] consistent matrix naming in common
 - [ ] check transformation math NAV
 - [ ] check ecef2lla math in common
 - [ ] minimize instances of variables in nav
-- [ ] fix method instance issue
+- [x] fix method instance issue
+- [ ] fix NAV alignment, add attitude
+- [x] APT three loop
+- [x] filtered deriv
+- [ ] anti windup

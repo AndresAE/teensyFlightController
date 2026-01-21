@@ -5,3 +5,4 @@
 .vscode/ipch
 test/tm/telemetry_log.txt
 .vscode/
+*.exe

@@ -1,11 +1,10 @@
 #include "MSN.h"
 #include "Wire.h"
 
-MSN::MSN(int sampleRate_Hz, IMU &imu)
-    : sampleRate_Hz(sampleRate_Hz), m_IMU_obj(imu), msnParams(cfg.getMsnParams())
+MSN::MSN(int sampleRate_Hz, TST &tst, IMU &imu)
+    : sampleRate_Hz(sampleRate_Hz), m_TST_obj(tst), m_IMU_obj(imu), msnParams(cfg.getMsnParams())
 {
   dt_s = 1 / static_cast<double>(sampleRate_Hz);
-  _busAttached_b = true;
 }
 
 void MSN::begin()
@@ -14,10 +13,6 @@ void MSN::begin()
 
 void MSN::step()
 {
-  if (!_busAttached_b)
-  {
-    return;
-  }
   missionManager();
 }
 
@@ -25,19 +20,29 @@ void MSN::step()
 
 void MSN::missionManager()
 {
+  if (m_TST_obj.m_TST.directMode_b)
+  {
+    missionPhase_e = fcsMissionPhase::MSN_DIRECT;
+    return;
+  }
+
   switch (missionPhase_e)
   {
-  case fcsModeMissionPhase::MSN_TAKEOFF:
+  case fcsMissionPhase::MSN_TAKEOFF:
     // takeoff state
     evaluateTakeoff();
     break;
-  case fcsModeMissionPhase::MSN_CRUISE:
+  case fcsMissionPhase::MSN_CRUISE:
     // cruise state
     evaluateCruise();
     break;
-  case fcsModeMissionPhase::MSN_LAND:
+  case fcsMissionPhase::MSN_LAND:
     // landing state
     evaluateLanding();
+    break;
+  case fcsMissionPhase::MSN_DIRECT:
+    // direct state
+    evaluateDirect();
     break;
   default:
     // idle unknown state
@@ -65,7 +70,12 @@ void MSN::evaluateIdle()
     _nxTakeoffDebounceCount++;
     if (_nxTakeoffDebounceCount >= msnParams.takeoffDebounceLimit)
     {
-      missionPhase_e = fcsModeMissionPhase::MSN_TAKEOFF;
+      missionPhase_e = fcsMissionPhase::MSN_TAKEOFF;
     }
   }
+}
+
+void MSN::evaluateDirect()
+{
+  // remain in direct mode until TST directMode_b is cleared
 }

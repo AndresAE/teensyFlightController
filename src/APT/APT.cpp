@@ -1,11 +1,10 @@
 #include "APT.h"
 #include "Wire.h"
 
-APT::APT(int sampleRate_Hz, GDC &gdc, IMU &imu)
-    : sampleRate_Hz(sampleRate_Hz), m_GDC_obj(gdc), m_IMU_obj(imu), aptParams(cfg.getAptParams())
+APT::APT(int sampleRate_Hz, TST &tst, MSN &msn, GDC &gdc, IMU &imu)
+    : sampleRate_Hz(sampleRate_Hz), m_TST_obj(tst), m_MSN_obj(msn), m_GDC_obj(gdc), m_IMU_obj(imu), aptParams(cfg.getAptParams())
 {
   dt_s = 1 / static_cast<double>(sampleRate_Hz);
-  _busAttached_b = true;
 }
 
 void APT::begin()
@@ -20,22 +19,57 @@ void APT::begin()
 
 void APT::step()
 {
-  if (!_busAttached_b)
+  if (m_MSN_obj.missionPhase_e == MSN::fcsMissionPhase::MSN_DIRECT)
   {
-    return;
+    evalDirect();
   }
+  else
+  {
+    evalRoll();
+    evalPitch();
+    evalYaw();
+    evalSpeed();
+
+    controlAllocation();
+    setEffectors();
+  }
+}
+
+void APT::evalRoll()
+{
   rollMiddleLoop();
-  pitchMiddleLoop();
-  yawMiddleLoop();
-  speedMiddleLoop();
-
   rollInnerLoop();
-  pitchInnerLoop();
-  yawInnerLoop();
-  speedInnerLoop();
+}
 
-  controlAllocation();
-  setEffectors();
+void APT::evalPitch()
+{
+  pitchMiddleLoop();
+  pitchInnerLoop();
+}
+
+void APT::evalYaw()
+{
+  yawMiddleLoop();
+  yawInnerLoop();
+}
+
+void APT::evalSpeed()
+{
+  speedMiddleLoop();
+  speedInnerLoop();
+}
+
+void APT::evalDirect()
+{
+  // In direct mode, APT does not modify commands; they are passed through from TST to effectors
+  for (int i = 0; i < _nEffectors; i++)
+  {
+    _servos[i].writeMicroseconds(m_TST_obj.m_TST.controlIn_us[i]);
+  }
+
+  _prevRollState_e = GDC::gdcRollMode::GRM_UNDEFINED;
+  _prevPitchState_e = GDC::gdcPitchMode::GPM_UNDEFINED;
+  _prevYawState_e = GDC::gdcYawMode::GYM_UNDEFINED;
 }
 
 void APT::rollMiddleLoop()
@@ -69,7 +103,16 @@ void APT::rollMiddleLoop()
 
 void APT::rollInnerLoop()
 {
-  m_APT.pbDotCmd_dps2 = proportionalControl(aptParams.gains.rollRate.K_p, m_APT.pbCmd_dps, m_IMU_obj.m_IMU.states.angularRateX_dps);
+  if (_resetRollIntegral_b)
+  {
+    _rollIntegralError = 0.0;
+  }
+  _rollIntegralError = C.trapIntegral(m_APT.pbCmd_dps, _pbCmdPrev_dps, _rollIntegralError, dt_s);
+  _pbCmdPrev_dps = m_APT.pbCmd_dps;
+
+  _xiRoll = _rollIntegralError * aptParams.gains.rollRate.K_i;
+
+  m_APT.rollEffectorCmd = proportionalControl(aptParams.gains.rollRate.K_d, _xiRoll, m_IMU_obj.m_IMU.states.angularRateX_dps);
 }
 
 void APT::pitchMiddleLoop()
@@ -111,7 +154,16 @@ void APT::pitchMiddleLoop()
 
 void APT::pitchInnerLoop()
 {
-  m_APT.qbDotCmd_dps2 = proportionalControl(aptParams.gains.pitchRate.K_p, m_APT.qbCmd_dps, m_IMU_obj.m_IMU.states.angularRateY_dps);
+  if (_resetPitchIntegral_b)
+  {
+    _pitchIntegralError = 0.0;
+  }
+  _pitchIntegralError = C.trapIntegral(m_APT.qbCmd_dps, _qbCmdPrev_dps, _pitchIntegralError, dt_s);
+  _qbCmdPrev_dps = m_APT.qbCmd_dps;
+
+  _xiPitch = _pitchIntegralError * aptParams.gains.pitchRate.K_i;
+
+  m_APT.pitchEffectorCmd = proportionalControl(aptParams.gains.pitchRate.K_d, _xiPitch, m_IMU_obj.m_IMU.states.angularRateY_dps);
 }
 
 void APT::yawMiddleLoop()
@@ -149,7 +201,16 @@ void APT::yawMiddleLoop()
 
 void APT::yawInnerLoop()
 {
-  m_APT.rbDotCmd_dps2 = proportionalControl(aptParams.gains.yawRate.K_p, m_APT.rbCmd_dps, m_IMU_obj.m_IMU.states.angularRateZ_dps);
+  if (_resetYawIntegral_b)
+  {
+    _yawIntegralError = 0.0;
+  }
+  _yawIntegralError = C.trapIntegral(m_APT.rbCmd_dps, _rbCmdPrev_dps, _yawIntegralError, dt_s);
+  _rbCmdPrev_dps = m_APT.rbCmd_dps;
+
+  _xiYaw = _yawIntegralError * aptParams.gains.yawRate.K_i;
+
+  m_APT.yawEffectorCmd = proportionalControl(aptParams.gains.yawRate.K_d, _xiYaw, m_IMU_obj.m_IMU.states.angularRateZ_dps);
 }
 
 void APT::speedMiddleLoop()
@@ -158,33 +219,32 @@ void APT::speedMiddleLoop()
 
 void APT::speedInnerLoop()
 {
-  m_APT.ubDotCmd_fps2 = m_GDC_obj.m_GDC.throttleCmd_pct;
-  m_APT.vbDotCmd_fps2 = 0.0;
-  m_APT.wbDotCmd_fps2 = 0.0;
+  m_APT.axialEffectorCmd = m_GDC_obj.m_GDC.throttleCmd_pct;
+  m_APT.lateralEffectorCmd = 0.0;
+  m_APT.normalEffectorCmd = 0.0;
 }
 
 void APT::controlAllocation()
 {
-  wBI_B_dps2[0] = m_APT.pbDotCmd_dps2;
-  wBI_B_dps2[1] = m_APT.qbDotCmd_dps2;
-  wBI_B_dps2[2] = m_APT.rbDotCmd_dps2;
+  rotationalPseudoEffector[0] = m_APT.rollEffectorCmd;
+  rotationalPseudoEffector[1] = m_APT.pitchEffectorCmd;
+  rotationalPseudoEffector[2] = m_APT.yawEffectorCmd;
 
-  aBI_B_fps2[0] = m_APT.ubDotCmd_fps2;
-  aBI_B_fps2[1] = m_APT.vbDotCmd_fps2;
-  aBI_B_fps2[2] = m_APT.wbDotCmd_fps2;
+  linearPseudoEffector[0] = m_APT.axialEffectorCmd;
+  linearPseudoEffector[1] = m_APT.lateralEffectorCmd;
+  linearPseudoEffector[2] = m_APT.normalEffectorCmd;
 
   // reset effector commands
-  m_APT.effectorCmd[0] = 0.0;
-  m_APT.effectorCmd[1] = 0.0;
-  m_APT.effectorCmd[2] = 0.0;
-  m_APT.effectorCmd[3] = 0.0;
-  m_APT.effectorCmd[4] = 0.0;
+  for (int ii = 0; ii < _nEffectors; ii++)
+  {
+    m_APT.effectorCmd[ii] = 0.0;
+  }
 
   for (int ii = 0; ii < _nEffectors; ii++)
   {
     for (int jj = 0; jj < _nRotationalAxes; jj++)
     {
-      m_APT.effectorCmd[ii] += aptParams.mixingRatioRotational[ii][jj] * wBI_B_dps2[jj];
+      m_APT.effectorCmd[ii] += aptParams.mixingRatioRotational[ii][jj] * rotationalPseudoEffector[jj];
     }
   }
 
@@ -192,7 +252,7 @@ void APT::controlAllocation()
   {
     for (int jj = 0; jj < _nLinearAxes; jj++)
     {
-      m_APT.effectorCmd[ii] += aptParams.mixingRatioLinear[ii][jj] * aBI_B_fps2[jj];
+      m_APT.effectorCmd[ii] += aptParams.mixingRatioLinear[ii][jj] * linearPseudoEffector[jj];
     }
   }
 
@@ -202,13 +262,16 @@ void APT::controlAllocation()
     if (m_APT.effectorCmd[ii] > aptParams.effectorLimitHi[ii])
     {
       m_APT.effectorCmd[ii] = aptParams.effectorLimitHi[ii];
+      _effectorOnLimit_b[ii] = true;
     }
     else if (m_APT.effectorCmd[ii] < aptParams.effectorLimitLo[ii])
     {
       m_APT.effectorCmd[ii] = aptParams.effectorLimitLo[ii];
+      _effectorOnLimit_b[ii] = true;
     }
     else
     {
+      _effectorOnLimit_b[ii] = false;
     }
     m_APT.effectorCmd[ii] += aptParams.effectorOffset[ii];
   }
@@ -221,10 +284,10 @@ void APT::setupEffectors()
   {
     // attach servo to pin and initialize to offset position
     _servos[ii].attach(aptParams.effectorPins[ii]);
-    int init_us = static_cast<int>((aptParams.effectorOffset[ii] / aptParams.servoRange_d[ii]) *
-                                       (aptParams.muMax_us[ii] - aptParams.muMin_us[ii]) +
-                                   aptParams.muMin_us[ii]);
-    _servos[ii].writeMicroseconds(init_us);
+    _init_us = static_cast<int>((aptParams.effectorOffset[ii] / aptParams.servoRange_d[ii]) *
+                                    (aptParams.muMax_us[ii] - aptParams.muMin_us[ii]) +
+                                aptParams.muMin_us[ii]);
+    _servos[ii].writeMicroseconds(_init_us);
   }
 }
 
@@ -233,34 +296,14 @@ void APT::setEffectors()
   // Compute pulse widths (microseconds) and write to servos (non-blocking)
   for (int ii = 0; ii < _nEffectors; ii++)
   {
-    int pulse_us = static_cast<int>((m_APT.effectorCmd[ii] / aptParams.servoRange_d[ii]) *
-                                        (aptParams.muMax_us[ii] - aptParams.muMin_us[ii]) +
-                                    aptParams.muMin_us[ii]);
-    _servos[ii].writeMicroseconds(pulse_us);
+    _pulse_us = static_cast<int>((m_APT.effectorCmd[ii] / aptParams.servoRange_d[ii]) *
+                                     (aptParams.muMax_us[ii] - aptParams.muMin_us[ii]) +
+                                 aptParams.muMin_us[ii]);
+    _servos[ii].writeMicroseconds(_pulse_us);
   }
 }
 
 double APT::proportionalControl(double k_p, double cvc, double cv)
 {
   return k_p * (cvc - cv);
-}
-
-double APT::proportionalIntegralControl(double k_p, double k_i, double cvc, double cv, bool resetIntegral_b)
-{
-  if (resetIntegral_b)
-  {
-    integralError = 0.0;
-  }
-  integralError += (cvc - cv) * dt_s;
-  return k_p * (cvc - cv) + k_i * integralError;
-}
-
-double APT::proportionalIntegralFeedforwardControl(double k_p, double k_i, double k_f, double cvc, double cv, bool resetIntegral_b)
-{
-  if (resetIntegral_b)
-  {
-    integralError = 0.0;
-  }
-  integralError += (cvc - cv) * dt_s;
-  return k_p * (cvc - cv) + k_i * integralError + k_f * cvc;
 }

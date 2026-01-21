@@ -1,77 +1,14 @@
 #include "GDC.h"
 #include "Wire.h"
 
-// --- interrupt-driven PWM capture (non-blocking) ---
-static volatile unsigned long gdc_lastRiseMicros[4] = {0, 0, 0, 0};
-static volatile unsigned long gdc_pulseWidthMicros[4] = {0, 0, 0, 0};
-static volatile unsigned long gdc_lastUpdateMicros[4] = {0, 0, 0, 0};
-static int gdc_controlPins[4] = {0, 0, 0, 0};
-static int gdc_nChannels = 0;
-
-static inline void gdc_handleEdge(int ch)
-{
-  unsigned long now = micros();
-  int pin = gdc_controlPins[ch];
-  if (digitalRead(pin) == HIGH)
-  {
-    gdc_lastRiseMicros[ch] = now;
-  }
-  else
-  {
-    unsigned long last = gdc_lastRiseMicros[ch];
-    if (last != 0)
-    {
-      gdc_pulseWidthMicros[ch] = now - last;
-      gdc_lastUpdateMicros[ch] = now;
-      gdc_lastRiseMicros[ch] = 0;
-    }
-  }
-}
-
-// Dedicated ISR wrappers for each channel (attachInterrupt requires a void(*)())
-extern "C" void gdc_isr_ch0() { gdc_handleEdge(0); }
-extern "C" void gdc_isr_ch1() { gdc_handleEdge(1); }
-extern "C" void gdc_isr_ch2() { gdc_handleEdge(2); }
-extern "C" void gdc_isr_ch3() { gdc_handleEdge(3); }
-
-GDC::GDC(int sampleRate_Hz)
-    : sampleRate_Hz(sampleRate_Hz), gdcParams(cfg.getGdcParams())
+GDC::GDC(int sampleRate_Hz, TST &tst, MSN &msn)
+    : sampleRate_Hz(sampleRate_Hz), m_TST_obj(tst), m_MSN_obj(msn), gdcParams(cfg.getGdcParams())
 {
   dt_s = 1 / static_cast<double>(sampleRate_Hz);
 }
 
 void GDC::begin()
 {
-  _nChannels = static_cast<int>(sizeof(gdcParams.controlInPins) / sizeof(gdcParams.controlInPins[0]));
-  for (int ii = 0; ii < _nChannels; ii++)
-  {
-    int pin = gdcParams.controlInPins[ii];
-    pinMode(pin, INPUT);
-    // store mapping for ISR handler
-    if (ii < _nChannels)
-    {
-      gdc_controlPins[ii] = pin;
-    }
-    // attach ISR wrappers per channel
-    switch (ii)
-    {
-    case 0:
-      attachInterrupt(digitalPinToInterrupt(pin), gdc_isr_ch0, CHANGE);
-      break;
-    case 1:
-      attachInterrupt(digitalPinToInterrupt(pin), gdc_isr_ch1, CHANGE);
-      break;
-    case 2:
-      attachInterrupt(digitalPinToInterrupt(pin), gdc_isr_ch2, CHANGE);
-      break;
-    case 3:
-      attachInterrupt(digitalPinToInterrupt(pin), gdc_isr_ch3, CHANGE);
-      break;
-    default:
-      break;
-    }
-  }
-  gdc_nChannels = _nChannels;
   m_GDC.rollMode_e = gdcRollMode::GRM_ROLLRATE;
   m_GDC.pitchMode_e = gdcPitchMode::GPM_ACCEL;
   m_GDC.yawMode_e = gdcYawMode::GYM_ACCEL;
@@ -79,61 +16,90 @@ void GDC::begin()
 
 void GDC::step()
 {
-  getControlInputs();
-  processControlInputs();
-  assignChannels();
+  if (m_TST_obj.m_TST.directMode_b)
+  {
+    getTestInputs();
+  }
+  else
+  {
+    // future: get inputs from MSN/NAV when not in direct mode
+  }
+  processGuidanceCommands();
 }
 
-void GDC::getControlInputs()
+void GDC::getTestInputs()
 {
-  unsigned long now = micros();
-  unsigned long timeout_us = static_cast<unsigned long>(gdcParams.controlInTimeOut_us);
-  for (int ii = 0; ii < _nChannels; ii++)
+  m_GDC.rollRateCmd_dps = m_TST_obj.m_TST.rollRateCmd_dps;
+  m_GDC.nzCmd_B_fps2 = m_TST_obj.m_TST.nzCmd_B_fps2;
+  m_GDC.nyCmd_B_fps2 = m_TST_obj.m_TST.nyCmd_B_fps2;
+  m_GDC.throttleCmd_pct = m_TST_obj.m_TST.throttleCmd_pct;
+}
+
+void GDC::processGuidanceCommands()
+{
+  switch (m_GDC.rollMode_e)
   {
-    unsigned long pw = 0;
-    if (ii < _nChannels)
-    {
-      unsigned long lastUpdate = gdc_lastUpdateMicros[ii];
-      if (lastUpdate != 0 && (now - lastUpdate) <= timeout_us)
-      {
-        pw = gdc_pulseWidthMicros[ii];
-      }
-      else
-      {
-        pw = 0;
-      }
-    }
-    gdcParams.controlIn_us[ii] = static_cast<double>(pw);
+  case gdcRollMode::GRM_ROLL:
+    applyCommandLimits(m_GDC.rollCmd_d, gdcParams.rollCmdLimits_d[0], gdcParams.rollCmdLimits_d[1]);
+    break;
+  case gdcRollMode::GRM_ROLLRATE:
+    applyCommandLimits(m_GDC.rollRateCmd_dps, gdcParams.rollRateCmdLimits_dps[0], gdcParams.rollRateCmdLimits_dps[1]);
+    break;
+  case gdcRollMode::GRM_BANK:
+    applyCommandLimits(m_GDC.bankCmd_d, gdcParams.bankCmdLimits_d[0], gdcParams.bankCmdLimits_d[1]);
+    break;
+  case gdcRollMode::GRM_UNDEFINED:
+    break;
+  }
+
+  switch (m_GDC.pitchMode_e)
+  {
+  case gdcPitchMode::GPM_PITCH:
+    applyCommandLimits(m_GDC.pitchCmd_d, gdcParams.pitchCmdLimits_d[0], gdcParams.pitchCmdLimits_d[1]);
+    break;
+  case gdcPitchMode::GPM_FPA:
+    applyCommandLimits(m_GDC.fpaCmd_d, gdcParams.fpaCmdLimits_d[0], gdcParams.fpaCmdLimits_d[1]);
+    break;
+  case gdcPitchMode::GPM_ACCEL:
+    applyCommandLimits(m_GDC.nzCmd_B_fps2, gdcParams.nzCmdLimits_B_fps2[0], gdcParams.nzCmdLimits_B_fps2[1]);
+    break;
+  case gdcPitchMode::GPM_ALTITUDE:
+    applyCommandLimits(m_GDC.altitudeCmd_ft, gdcParams.altitudeCmdLimits_ft[0], gdcParams.altitudeCmdLimits_ft[1]);
+    break;
+  case gdcPitchMode::GPM_PITCHRATE:
+    applyCommandLimits(m_GDC.pitchRateCmd_dps, gdcParams.pitchRateCmdLimits_dps[0], gdcParams.pitchRateCmdLimits_dps[1]);
+    break;
+  case gdcPitchMode::GPM_UNDEFINED:
+    break;
+  }
+
+  switch (m_GDC.yawMode_e)
+  {
+  case gdcYawMode::GYM_HEADING:
+    applyCommandLimits(m_GDC.headingCmd_d, gdcParams.headingCmdLimits_d[0], gdcParams.headingCmdLimits_d[1]);
+    break;
+  case gdcYawMode::GYM_AZIMUTH:
+    applyCommandLimits(m_GDC.azimuthCmd_d, gdcParams.azimuthCmdLimits_d[0], gdcParams.azimuthCmdLimits_d[1]);
+    break;
+  case gdcYawMode::GYM_ACCEL:
+    applyCommandLimits(m_GDC.nyCmd_B_fps2, gdcParams.nyCmdLimits_B_fps2[0], gdcParams.nyCmdLimits_B_fps2[1]);
+    break;
+  case gdcYawMode::GYM_YAWRATE:
+    applyCommandLimits(m_GDC.yawRateCmd_dps, gdcParams.yawRateCmdLimits_dps[0], gdcParams.yawRateCmdLimits_dps[1]);
+    break;
+  case gdcYawMode::GYM_UNDEFINED:
+    break;
   }
 }
 
-void GDC::processControlInputs()
+void GDC::applyCommandLimits(double value, double minLimit, double maxLimit)
 {
-  for (int ii = 0; ii < _nChannels; ii++)
+  if (value < minLimit)
   {
-    // scale pwm to control input raw value
-    gdcParams.controlInRaw[ii] = gdcParams.k_pwm[ii] * (static_cast<double>(gdcParams.controlIn_us[ii]) - gdcParams.pwmOffset_us[ii]);
-
-    // apply limits
-    if (gdcParams.controlInRaw[ii] > gdcParams.controlInHiLimit[ii])
-    {
-      gdcParams.controlIn[ii] = gdcParams.controlInHiLimit[ii];
-    }
-    else if (gdcParams.controlInRaw[ii] < gdcParams.controlInLoLimit[ii])
-    {
-      gdcParams.controlIn[ii] = gdcParams.controlInLoLimit[ii];
-    }
-    else
-    {
-      gdcParams.controlIn[ii] = gdcParams.controlInRaw[ii];
-    }
+    value = minLimit;
   }
-}
-
-void GDC::assignChannels()
-{
-  m_GDC.rollRateCmd_dps = gdcParams.controlIn[0];
-  m_GDC.nzCmd_B_fps2 = gdcParams.controlIn[1];
-  m_GDC.nyCmd_B_fps2 = gdcParams.controlIn[2];
-  m_GDC.throttleCmd_pct = gdcParams.controlIn[3];
+  else if (value > maxLimit)
+  {
+    value = maxLimit;
+  }
 }

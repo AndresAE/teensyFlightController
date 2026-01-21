@@ -20,6 +20,11 @@ double Common::lowPassFilter(double x, double x_prev, double alpha)
   return alpha * x + (1.0 - alpha) * x_prev;
 }
 
+double Common::filteredDerivative(double x, double x_prev, double derivPrev, double alpha, double dt_s)
+{
+  return lowPassFilter((x - x_prev) / dt_s, derivPrev, alpha);
+}
+
 double Common::calcAlpha(double cutoff_Hz, double dt_s)
 {
   return dt_s / (1.0 / (2.0 * _PI * cutoff_Hz) + dt_s);
@@ -81,7 +86,7 @@ Common::matrix Common::matrixMultiply(Common::matrix A, Common::matrix B)
   return mat;
 }
 
-Common::matrix Common::matrixAdd(Common::matrix A, Common::matrix B, bool negate_B)
+Common::matrix Common::matrixAdd(Common::matrix A, Common::matrix B, bool negate_b)
 {
   Common::matrix R;
   R.rows = A.rows;
@@ -90,7 +95,7 @@ Common::matrix Common::matrixAdd(Common::matrix A, Common::matrix B, bool negate
   {
     for (int j = 0; j < A.cols; j++)
     {
-      if (negate_B)
+      if (negate_b)
       {
         R.m[i][j] = A.m[i][j] - B.m[i][j];
       }
@@ -101,11 +106,6 @@ Common::matrix Common::matrixAdd(Common::matrix A, Common::matrix B, bool negate
     }
   }
   return R;
-}
-
-Common::matrix Common::matrixAdd(Common::matrix A, Common::matrix B)
-{
-  return Common::matrixAdd(A, B, false);
 }
 
 Common::matrix Common::matrixTranspose(Common::matrix A)
