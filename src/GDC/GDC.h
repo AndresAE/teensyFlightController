@@ -4,12 +4,14 @@
 #include <cmath>
 #include <Arduino.h>
 #include "../Common/Common.h"
+#include "../TST/TST.h"
+#include "../MSN/MSN.h"
 #include "../config/config.h"
 
 class GDC
 {
 public:
-  GDC(int sampleRate_Hz);
+  GDC(int sampleRate_Hz, TST &tst, MSN &msn);
 
   int sampleRate_Hz;
   double dt_s;
@@ -17,15 +19,16 @@ public:
   // public methods
   void begin();
   void step();
-  void getControlInputs();
-  void processControlInputs();
-  void assignChannels();
+  void getTestInputs();
+  void processGuidanceCommands();
+  void applyCommandLimits(double value, double minLimit, double maxLimit);
 
   enum gdcRollMode
   {
     GRM_ROLL = 0,
     GRM_ROLLRATE = 1,
     GRM_BANK = 2,
+    GRM_UNDEFINED = 256,
   };
 
   enum gdcPitchMode
@@ -35,6 +38,7 @@ public:
     GPM_ACCEL = 2,
     GPM_ALTITUDE = 3,
     GPM_PITCHRATE = 4,
+    GPM_UNDEFINED = 256,
   };
 
   enum gdcYawMode
@@ -42,7 +46,8 @@ public:
     GYM_HEADING = 0,
     GYM_AZIMUTH = 1,
     GYM_ACCEL = 2,
-    GYM_YAWRATE = 3
+    GYM_YAWRATE = 3,
+    GYM_UNDEFINED = 256,
   };
 
   struct busGDC
@@ -67,13 +72,15 @@ public:
 
   busGDC m_GDC;
 
+  // references to other modules
+  TST &m_TST_obj;
+  MSN &m_MSN_obj;
+
 private:
   Common C;
   Config cfg;
 
   Config::gdcParams gdcParams = cfg.getGdcParams();
-
-  int _nChannels = 0;
 };
 
 #endif // GDC_H

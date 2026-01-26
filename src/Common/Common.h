@@ -45,6 +45,7 @@ public:
     double calcAlpha(double cutoff_Hz, double dt_s);
     double trapIntegral(double x, double x_prev, double y, double dt_s);
     double lowPassFilter(double x, double x_prev, double alpha);
+    double filteredDerivative(double x, double x_prev, double derivPrev, double alpha, double dt_s);
     double primeVerticalRadiusOfCurvature(double latG_d);
 
     matrix matrixMultiply(matrix A, matrix B);

@@ -75,8 +75,14 @@ private:
   const Config::imuParams &imuParams = cfg.getImuParams();
 
   double _gyroX_offset_dps = 0.0, _gyroY_offset_dps = 0.0, _gyroZ_offset_dps = 0.0;
-  double _accelMagnitudeScaling = 0.0;
+  double _accelMagnitudeScaling = 1.0;
+  double _gyroX_offsetSum_dps = 0.0, _gyroY_offsetSum_dps = 0.0, _gyroZ_offsetSum_dps = 0.0;
+  double _accelMagnitudeScalingSum = 0.0;
   double _tmpPitch_d = 0.0;
+
+  double _roll_r, _pitch_r, _sinR, _cosR, _cosP, _tanP, _secP;
+  int16_t _ax0, _ay0, _az0;
+  int16_t _gx0, _gy0, _gz0;
 
   int16_t _axRaw, _ayRaw, _azRaw;
   int16_t _gxRaw, _gyRaw, _gzRaw;
@@ -89,7 +95,7 @@ private:
 
   double _cX, _sX, _cY, _sY, _cZ, _sZ;
 
-  int8_t BNO055_ADDRESS = 0x29;
+  int8_t BNO055_ADDRESS = 0x29; // 0x28;
   int8_t BNO055_OPR_MODE = 0x3D;
   int8_t BNO055_PWR_MODE = 0x3E;
   int8_t BNO055_PAGE_ID = 0x07;

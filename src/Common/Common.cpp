@@ -20,6 +20,11 @@ double Common::lowPassFilter(double x, double x_prev, double alpha)
   return alpha * x + (1.0 - alpha) * x_prev;
 }
 
+double Common::filteredDerivative(double x, double x_prev, double derivPrev, double alpha, double dt_s)
+{
+  return lowPassFilter((x - x_prev) / dt_s, derivPrev, alpha);
+}
+
 double Common::calcAlpha(double cutoff_Hz, double dt_s)
 {
   return dt_s / (1.0 / (2.0 * _PI * cutoff_Hz) + dt_s);

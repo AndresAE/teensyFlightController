@@ -4,23 +4,25 @@
 #include <cmath>
 #include <Arduino.h>
 #include "../Common/Common.h"
+#include "../TST/TST.h"
 #include "../IMU/IMU.h"
 #include "../config/config.h"
 
 class MSN
 {
 public:
-    MSN(int sampleRate_Hz, IMU &imu);
+    MSN(int sampleRate_Hz, TST &tst, IMU &imu);
 
-    enum fcsModeMissionPhase
+    enum fcsMissionPhase
     {
         MSN_IDLE = 0,
         MSN_TAKEOFF = 1,
         MSN_CRUISE = 2,
-        MSN_LAND = 3
+        MSN_LAND = 3,
+        MSN_DIRECT = 4
     };
 
-    fcsModeMissionPhase missionPhase_e = MSN_IDLE;
+    fcsMissionPhase missionPhase_e = MSN_IDLE;
 
     int sampleRate_Hz;
     double dt_s;
@@ -33,7 +35,10 @@ public:
     void evaluateCruise();
     void evaluateLanding();
     void evaluateIdle();
+    void evaluateDirect();
+
     // attachBus removed: MSN holds reference to IMU object
+    TST &m_TST_obj;
     IMU &m_IMU_obj;
 
 private:

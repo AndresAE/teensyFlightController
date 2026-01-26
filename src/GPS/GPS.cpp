@@ -2,30 +2,6 @@
 
 String sentence = "";
 
-constexpr uint8_t UBX_DISABLE_GLL[] = {
-    0xB5, 0x62, 0x06, 0x01, 0x08, 0x00, 0xF0, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0A, 0x2B};
-
-constexpr uint8_t UBX_DISABLE_GSA[] = {
-    0xB5, 0x62, 0x06, 0x01, 0x08, 0x00, 0xF0, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0B, 0x2C};
-
-constexpr uint8_t UBX_DISABLE_GSV[] = {
-    0xB5, 0x62, 0x06, 0x01, 0x08, 0x00, 0xF0, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0C, 0x2D};
-
-constexpr uint8_t UBX_DISABLE_RMC[] = {
-    0xB5, 0x62, 0x06, 0x01, 0x08, 0x00, 0xF0, 0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0D, 0x2E};
-
-constexpr uint8_t UBX_DISABLE_VTG[] = {
-    0xB5, 0x62, 0x06, 0x01, 0x08, 0x00, 0xF0, 0x05, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0E, 0x2F};
-
-constexpr uint8_t UBX_ENABLE_GGA[] = {
-    0xB5, 0x62, 0x06, 0x01, 0x08, 0x00, 0xF0, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x09, 0x2A};
-
-constexpr uint8_t UBX_RATE_5HZ[] = {
-    0xB5, 0x62, 0x06, 0x08, 0x06, 0x00, 0xC8, 0x00, 0x01, 0x00, 0x01, 0x00, 0xDE, 0x6A};
-
-constexpr uint8_t UBX_SAVE[] = {
-    0xB5, 0x62, 0x06, 0x09, 0x0D, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x17, 0x31};
-
 GPS::GPS()
     : gpsParams(cfg.getGpsParams())
 {
@@ -63,8 +39,8 @@ void GPS::processInputs()
 {
   while (Serial3.available())
   {
-    char c = Serial3.read();
-    if (c == '\n' || c == '\r')
+    _c = Serial3.read();
+    if (_c == '\n' || _c == '\r')
     {
       if (sentence.startsWith("$GNGGA"))
       {
@@ -74,45 +50,44 @@ void GPS::processInputs()
     }
     else
     {
-      sentence += c;
+      sentence += _c;
     }
   }
 }
 
 void GPS::processGNGGA(String s)
 {
-  String fields[15];
-  splitNMEA(s, fields, 15);
+  splitNMEA(s, _fields, 15);
 
   m_LLA = {
-      convertToDecimalDegrees(fields[2], fields[3]),
-      convertToDecimalDegrees(fields[4], fields[5]),
-      (fields[9].toFloat() + fields[10].toFloat()) * C.M2FT};
+      convertToDecimalDegrees(_fields[2], _fields[3]),
+      convertToDecimalDegrees(_fields[4], _fields[5]),
+      (_fields[9].toFloat() + _fields[10].toFloat()) * C.M2FT};
 
   m_ECEF = C.lla2ecef(m_LLA);
 
   m_GPS = {
       m_LLA,
       m_ECEF,
-      fields[1].toFloat(),
-      fields[6].toInt(),
-      fields[7].toInt(),
-      fields[8].toFloat()};
+      _fields[1].toFloat(),
+      _fields[6].toInt(),
+      _fields[7].toInt(),
+      _fields[8].toFloat()};
 }
 
 void GPS::splitNMEA(String s, String *fields, int maxFields)
 {
-  int index = 0;
+  _index = 0;
   for (int i = 0; i < maxFields; i++)
   {
-    int commaIndex = s.indexOf(',', index);
+    int commaIndex = s.indexOf(',', _index);
     if (commaIndex == -1)
     {
-      fields[i] = s.substring(index);
+      fields[i] = s.substring(_index);
       break;
     }
-    fields[i] = s.substring(index, commaIndex);
-    index = commaIndex + 1;
+    fields[i] = s.substring(_index, commaIndex);
+    _index = commaIndex + 1;
   }
 }
 
@@ -120,14 +95,14 @@ double GPS::convertToDecimalDegrees(String raw, String dir)
 {
   if (raw.length() < 6)
     return 0.0;
-  int dotIndex = raw.indexOf('.');
-  int degLength = dotIndex - 2;
-  double deg = raw.substring(0, degLength).toFloat();
-  double min = raw.substring(degLength).toFloat();
-  double decimal = deg + (min / C.MIN2SEC);
+  _dotIndex = raw.indexOf('.');
+  _degLength = _dotIndex - 2;
+  _deg = raw.substring(0, _degLength).toFloat();
+  _min = raw.substring(_degLength).toFloat();
+  _decimal = _deg + (_min / C.MIN2SEC);
   if (dir == "S" || dir == "W")
-    decimal *= -1;
-  return decimal;
+    _decimal *= -1;
+  return _decimal;
 }
 
 void GPS::sendUBX(const uint8_t *msg, uint8_t len)
@@ -137,5 +112,5 @@ void GPS::sendUBX(const uint8_t *msg, uint8_t len)
     Serial3.write(msg[i]);
   }
   Serial3.flush();
-  delay(50);
+  delay(_sendUBXDelay_ms);
 }

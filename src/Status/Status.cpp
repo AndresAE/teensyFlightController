@@ -1,6 +1,6 @@
 #include "Status.h"
 
-void printStatus(Stream &serialPort, int now_ms, int endTime_ms, MSN &msn, IMU &imu, GPS &gps, NAV &nav, GDC &gdc, APT &apt)
+void printStatus(Stream &serialPort, int now_ms, int endTime_ms, TST &tst, MSN &msn, IMU &imu, GPS &gps, NAV &nav, GDC &gdc, APT &apt)
 {
     // print status to serial port (grouped to reduce calls)
 
@@ -18,6 +18,23 @@ void printStatus(Stream &serialPort, int now_ms, int endTime_ms, MSN &msn, IMU &
     // msn block
     serialPort.print("msn: phase=");
     serialPort.println(msn.missionPhase_e);
+
+    // tst block
+    {
+        String s;
+        s.reserve(160);
+        s += "tst: control_1_In=";
+        s += String(tst.m_TST.controlIn[0]);
+        s += ", control_2_In=";
+        s += String(tst.m_TST.controlIn[1]);
+        s += ", control_3_In=";
+        s += String(tst.m_TST.controlIn[2]);
+        s += ", control_4_In=";
+        s += String(tst.m_TST.controlIn[3]);
+        s += ", control_5_In=";
+        s += String(tst.m_TST.controlIn[4]);
+        serialPort.println(s);
+    }
 
     // imu block
     {
