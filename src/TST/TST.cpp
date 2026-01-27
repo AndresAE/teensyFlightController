@@ -2,10 +2,10 @@
 #include "Wire.h"
 
 // --- interrupt-driven PWM capture (non-blocking) ---
-static volatile unsigned long tst_lastRiseMicros[4] = {0, 0, 0, 0};
-static volatile unsigned long tst_pulseWidthMicros[4] = {0, 0, 0, 0};
-static volatile unsigned long tst_lastUpdateMicros[4] = {0, 0, 0, 0};
-static int tst_controlPins[4] = {0, 0, 0, 0};
+static volatile unsigned long tst_lastRiseMicros[5] = {0, 0, 0, 0, 0};
+static volatile unsigned long tst_pulseWidthMicros[5] = {0, 0, 0, 0, 0};
+static volatile unsigned long tst_lastUpdateMicros[5] = {0, 0, 0, 0, 0};
+static int tst_controlPins[5] = {0, 0, 0, 0, 0};
 static int tst_nChannels = 0;
 static inline void tst_handleEdge(int ch)
 {
@@ -32,6 +32,7 @@ extern "C" void tst_isr_ch0() { tst_handleEdge(0); }
 extern "C" void tst_isr_ch1() { tst_handleEdge(1); }
 extern "C" void tst_isr_ch2() { tst_handleEdge(2); }
 extern "C" void tst_isr_ch3() { tst_handleEdge(3); }
+extern "C" void tst_isr_ch4() { tst_handleEdge(4); }
 
 TST::TST(int sampleRate_Hz)
     : sampleRate_Hz(sampleRate_Hz), tstParams(cfg.getTstParams())
@@ -66,6 +67,8 @@ void TST::begin()
     case 3:
       attachInterrupt(digitalPinToInterrupt(pin), tst_isr_ch3, CHANGE);
       break;
+    case 4:
+      attachInterrupt(digitalPinToInterrupt(pin), tst_isr_ch4, CHANGE);
     default:
       break;
     }
@@ -133,7 +136,7 @@ void TST::assignChannels()
   m_TST.nyCmd_B_fps2 = m_TST.controlIn[2];
   m_TST.throttleCmd_pct = m_TST.controlIn[3];
 
-  if (m_TST.controlIn_us[_nChannels - 1] > tstParams.directModeThreshold_us)
+  if (m_TST.controlIn_us[4] > tstParams.directModeThreshold_us)
   {
     m_TST.directMode_b = true;
   }

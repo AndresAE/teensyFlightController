@@ -37,8 +37,8 @@ public:
         int controlInTimeOut_us = 25000;        // 25 ms timeout
         double pwmOffset_us[5] = {1500.0, 1770, 1500.0, 1100, 0};
         double k_pwm[5] = {-0.15, 0.12, -0.02, 0.00125, 1}; // scale factor from pwm to control input
-        double controlInHiLimit[5] = {60, 16.0, 8.0, 1.0, 1000.0};
-        double controlInLoLimit[5] = {-60.0, -80.0, -8.0, 0.0, 2000.0};
+        double controlInHiLimit[5] = {60, 16.0, 8.0, 1.0, 2000.0};
+        double controlInLoLimit[5] = {-60.0, -80.0, -8.0, 0.0, 1000.0};
         int directModeThreshold_us = 1700;
     };
     struct aptParams

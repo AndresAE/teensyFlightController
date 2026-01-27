@@ -23,6 +23,7 @@ void GDC::step()
   else
   {
     // future: get inputs from MSN/NAV when not in direct mode
+    getTestInputs();
   }
   processGuidanceCommands();
 }

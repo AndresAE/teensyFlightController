@@ -57,11 +57,6 @@ void IMU::begin()
   _axPrev_fps2 = _accelMagnitudeScaling * _axPrev_fps2 / static_cast<double>(imuParams.nInit);
   _ayPrev_fps2 = _accelMagnitudeScaling * _ayPrev_fps2 / static_cast<double>(imuParams.nInit);
   _azPrev_fps2 = _accelMagnitudeScaling * _azPrev_fps2 / static_cast<double>(imuParams.nInit);
-
-  Serial.println(_accelMagnitudeScaling);
-  Serial.println(_gyroX_offset_dps);
-  Serial.println(_gyroY_offset_dps);
-  Serial.println(_gyroZ_offset_dps);
 }
 void IMU::step()
 {

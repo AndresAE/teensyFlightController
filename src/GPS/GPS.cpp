@@ -25,8 +25,6 @@ void GPS::begin()
   sendUBX(UBX_RATE_5HZ, sizeof(UBX_RATE_5HZ));
   sendUBX(UBX_SAVE, sizeof(UBX_SAVE));
 
-  Serial.println("GT-U7 configured for 5 Hz, GNGGA only");
-
   delay(gpsParams.boot_time_ms);
 }
 

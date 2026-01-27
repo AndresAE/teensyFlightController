@@ -46,6 +46,8 @@ private:
     const Config::msnParams &msnParams = cfg.getMsnParams();
     int _nxTakeoffDebounceCount = 0;
     bool _busAttached_b = false;
+    fcsMissionPhase _missionPhasePredirect_e = MSN_IDLE;
+    fcsMissionPhase _missionPhasePrev_e = MSN_IDLE;
 };
 
 #endif // MSN_H

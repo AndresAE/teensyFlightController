@@ -20,10 +20,14 @@ void MSN::step()
 
 void MSN::missionManager()
 {
-  if (m_TST_obj.m_TST.directMode_b)
+  if (m_TST_obj.m_TST.directMode_b && (_missionPhasePrev_e != fcsMissionPhase::MSN_DIRECT))
   {
+    _missionPhasePredirect_e = missionPhase_e;
     missionPhase_e = fcsMissionPhase::MSN_DIRECT;
-    return;
+  }
+  else if (!m_TST_obj.m_TST.directMode_b && (_missionPhasePrev_e == fcsMissionPhase::MSN_DIRECT))
+  {
+    missionPhase_e = _missionPhasePredirect_e;
   }
 
   switch (missionPhase_e)
@@ -49,6 +53,7 @@ void MSN::missionManager()
     evaluateIdle();
     break;
   }
+  _missionPhasePrev_e = missionPhase_e;
 }
 
 void MSN::evaluateTakeoff()
