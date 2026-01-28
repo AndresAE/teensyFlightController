@@ -66,6 +66,13 @@ int main()
         std::cout << "\n";
     }
 
+    Common::busLLA lla = {37.7749, -122.4194, 100.0};
+    Common::busEcef ecef = C.lla2ecef(lla);
+    Common::busLLA lla2 = C.ecef2lla(ecef);
+    std::cout << "Original LLA: " << lla.latG_d << ", " << lla.lon_d << ", " << lla.hae_ft << "\n";
+    std::cout << "Converted ECEF: " << ecef.x_ft << ", " << ecef.y_ft << ", " << ecef.z_ft << "\n";
+    std::cout << "Converted back to LLA: " << lla2.latG_d << ", " << lla2.lon_d << ", " << lla2.hae_ft << "\n";
+
     return 0;
 }
 

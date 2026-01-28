@@ -52,6 +52,7 @@ public:
             {1.0, 0.0, 0.0, 0.0, 0.0},  // heading,
             {1.0, 0.0, 0.0, 0.0, 0.0},  // ny, k_p, k_i, k_f, k_antiWindup
             {1.0, 0.0, 0.0, 0.0, 0.0}}; // yawRate, k_p, k_i, k_f, k_antiWindup
+        bool integratorOff_b = true;
         double effectorLimitHi[5] = {20.0, 20.0, 20.0, 20.0, 1.0};
         double effectorLimitLo[5] = {-20.0, -20.0, -20.0, -20.0, 0.0};
         double effectorOffset[5] = {90.0, 90.0, 90.0, 90.0, 0.0};

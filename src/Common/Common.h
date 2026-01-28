@@ -11,6 +11,7 @@ public:
     double GRAVITY_fps2 = 32.174;    // ft/s²
     double WGS84_r_ft = 20925646.33; // ft
     double WGS84_e = 0.08181919078;
+    double WGS84_e2 = 0.08181919078 * 0.08181919078;
     double WGS84_f = 0.00335281066;
     double DEG2RAD = 0.01745329251994;
     double RAD2DEG = 57.2957795130823;
@@ -60,6 +61,8 @@ private:
     double x, y, z;
     double x_prev, alpha, dt_s;
     double n_ft;
+    int _nIterLat = 5;
+    int _nIter;
     busLLA m_LLA = {0.0, 0.0, 0.0};
     busEcef m_ECEF = {0.0, 0.0, 0.0};
 };

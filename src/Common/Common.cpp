@@ -33,8 +33,7 @@ double Common::calcAlpha(double cutoff_Hz, double dt_s)
 double Common::primeVerticalRadiusOfCurvature(double latG_d)
 {
   double sinLat = sin(DEG2RAD * latG_d);
-  double e2 = WGS84_e * WGS84_e;
-  return WGS84_r_ft / sqrt(1.0 - e2 * (sinLat * sinLat));
+  return WGS84_r_ft / sqrt(1.0 - WGS84_e2 * (sinLat * sinLat));
 }
 
 Common::busEcef Common::lla2ecef(busLLA lla_ddft)
@@ -43,27 +42,26 @@ Common::busEcef Common::lla2ecef(busLLA lla_ddft)
   double cosLat = cos(DEG2RAD * lla_ddft.latG_d);
   double cosLon = cos(DEG2RAD * lla_ddft.lon_d);
   double sinLat = sin(DEG2RAD * lla_ddft.latG_d);
-  double e2 = WGS84_e * WGS84_e;
   m_ECEF.x_ft = (n_ft + lla_ddft.hae_ft) * cosLat * cosLon;
   m_ECEF.y_ft = (n_ft + lla_ddft.hae_ft) * cosLat * sin(DEG2RAD * lla_ddft.lon_d);
-  m_ECEF.z_ft = ((1.0 - e2) * n_ft + lla_ddft.hae_ft) * sinLat;
+  m_ECEF.z_ft = ((1.0 - WGS84_e2) * n_ft + lla_ddft.hae_ft) * sinLat;
   return m_ECEF;
 }
 
 Common::busLLA Common::ecef2lla(busEcef ecef_ft)
 {
-  double e2 = WGS84_e * WGS84_e;
-  double p = norm(ecef_ft.x_ft, ecef_ft.y_ft, 0.0);
-  double theta = atan2(ecef_ft.z_ft * WGS84_r_ft, p * WGS84_r_ft * (1.0 - WGS84_f));
-  double sinTheta = sin(theta);
-  double cosTheta = cos(theta);
-
-  m_LLA.latG_d = RAD2DEG * atan2(ecef_ft.z_ft + e2 * (1.0 - WGS84_f) * WGS84_r_ft * sinTheta * sinTheta * sinTheta,
-                                 p - e2 * WGS84_r_ft * cosTheta * cosTheta * cosTheta);
   m_LLA.lon_d = RAD2DEG * atan2(ecef_ft.y_ft, ecef_ft.x_ft);
-  n_ft = primeVerticalRadiusOfCurvature(m_LLA.latG_d);
-  m_LLA.hae_ft = p / cos(DEG2RAD * m_LLA.latG_d) - n_ft;
+  _nIter = 0;
+  m_LLA.hae_ft = 0.0;
+  n_ft = WGS84_r_ft;
 
+  while (_nIter < _nIterLat)
+  {
+    m_LLA.latG_d = RAD2DEG * atan((ecef_ft.z_ft) / (sqrt(ecef_ft.x_ft * ecef_ft.x_ft + ecef_ft.y_ft * ecef_ft.y_ft) * (1 - (WGS84_e2 * n_ft) / (n_ft + m_LLA.hae_ft))));
+    n_ft = primeVerticalRadiusOfCurvature(m_LLA.latG_d);
+    m_LLA.hae_ft = sqrt(ecef_ft.x_ft * ecef_ft.x_ft + ecef_ft.y_ft * ecef_ft.y_ft) / cos(DEG2RAD * m_LLA.latG_d) - n_ft;
+    _nIter++;
+  }
   return m_LLA;
 }
 

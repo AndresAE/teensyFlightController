@@ -107,11 +107,17 @@ void APT::rollInnerLoop()
   {
     _rollIntegralError = 0.0;
   }
-  _rollIntegralError = C.trapIntegral(m_APT.pbCmd_dps, _pbCmdPrev_dps, _rollIntegralError, dt_s);
-  _pbCmdPrev_dps = m_APT.pbCmd_dps;
+  if (aptParams.integratorOff_b)
+  {
+    _xiRoll = m_APT.pbCmd_dps;
+  }
+  else
+  {
+    _rollIntegralError = C.trapIntegral(m_APT.pbCmd_dps, _pbCmdPrev_dps, _rollIntegralError, dt_s);
+    _pbCmdPrev_dps = m_APT.pbCmd_dps;
 
-  _xiRoll = _rollIntegralError * aptParams.gains.rollRate.K_i;
-
+    _xiRoll = _rollIntegralError * aptParams.gains.rollRate.K_i;
+  }
   m_APT.rollEffectorCmd = proportionalControl(aptParams.gains.rollRate.K_d, _xiRoll, m_IMU_obj.m_IMU.states.angularRateX_dps);
 }
 
@@ -158,11 +164,17 @@ void APT::pitchInnerLoop()
   {
     _pitchIntegralError = 0.0;
   }
-  _pitchIntegralError = C.trapIntegral(m_APT.qbCmd_dps, _qbCmdPrev_dps, _pitchIntegralError, dt_s);
-  _qbCmdPrev_dps = m_APT.qbCmd_dps;
+  if (aptParams.integratorOff_b)
+  {
+    _xiPitch = m_APT.qbCmd_dps;
+  }
+  else
+  {
+    _pitchIntegralError = C.trapIntegral(m_APT.qbCmd_dps, _qbCmdPrev_dps, _pitchIntegralError, dt_s);
+    _qbCmdPrev_dps = m_APT.qbCmd_dps;
 
-  _xiPitch = _pitchIntegralError * aptParams.gains.pitchRate.K_i;
-
+    _xiPitch = _pitchIntegralError * aptParams.gains.pitchRate.K_i;
+  }
   m_APT.pitchEffectorCmd = proportionalControl(aptParams.gains.pitchRate.K_d, _xiPitch, m_IMU_obj.m_IMU.states.angularRateY_dps);
 }
 
@@ -205,11 +217,17 @@ void APT::yawInnerLoop()
   {
     _yawIntegralError = 0.0;
   }
-  _yawIntegralError = C.trapIntegral(m_APT.rbCmd_dps, _rbCmdPrev_dps, _yawIntegralError, dt_s);
-  _rbCmdPrev_dps = m_APT.rbCmd_dps;
+  if (aptParams.integratorOff_b)
+  {
+    _xiYaw = m_APT.rbCmd_dps;
+  }
+  else
+  {
+    _yawIntegralError = C.trapIntegral(m_APT.rbCmd_dps, _rbCmdPrev_dps, _yawIntegralError, dt_s);
+    _rbCmdPrev_dps = m_APT.rbCmd_dps;
 
-  _xiYaw = _yawIntegralError * aptParams.gains.yawRate.K_i;
-
+    _xiYaw = _yawIntegralError * aptParams.gains.yawRate.K_i;
+  }
   m_APT.yawEffectorCmd = proportionalControl(aptParams.gains.yawRate.K_d, _xiYaw, m_IMU_obj.m_IMU.states.angularRateZ_dps);
 }
 

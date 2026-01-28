@@ -31,10 +31,12 @@
 - [x] 'Direct' law for GDC commands
 - [ ] consistent matrix naming in common
 - [ ] check transformation math NAV
-- [ ] check ecef2lla math in common
+- [x] check lla2ecef and ecef2lla math in common
 - [ ] minimize instances of variables in nav
 - [x] fix method instance issue
 - [ ] fix NAV alignment, add attitude
 - [x] APT three loop
 - [x] filtered deriv
 - [ ] anti windup
+- [ ] GPS significant figures
+- [ ] 
