@@ -94,6 +94,8 @@ public:
     {
         int gps_baud = 9600;
         int boot_time_ms = 2000;
+        double dt_gps_s = 0.25;
+        double cutoff_Hz = 20.0;
     };
     struct gdcParams
     {

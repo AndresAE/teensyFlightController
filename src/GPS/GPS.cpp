@@ -2,10 +2,10 @@
 
 String sentence = "";
 
-GPS::GPS()
-    : gpsParams(cfg.getGpsParams())
+GPS::GPS(int sampleRate_Hz)
+    : sampleRate_Hz(sampleRate_Hz), gpsParams(cfg.getGpsParams())
 {
-  // Constructor logic if needed
+  dt_s = 1 / static_cast<double>(sampleRate_Hz);
 }
 
 void GPS::begin()
@@ -14,6 +14,8 @@ void GPS::begin()
   while (!Serial3)
   {
   }; // Wait for serial
+
+  C.calcAlpha(gpsParams.cutoff_Hz, dt_s);
 
   sendUBX(UBX_DISABLE_GLL, sizeof(UBX_DISABLE_GLL));
   sendUBX(UBX_DISABLE_GSA, sizeof(UBX_DISABLE_GSA));
@@ -30,7 +32,20 @@ void GPS::begin()
 
 void GPS::step()
 {
+  _velocityValid_b = false;
   processInputs();
+
+  if (m_GPS.timeStamp_s - _timeStampPrev_s <= gpsParams.dt_gps_s)
+  {
+    calcVelocity(m_GPS.ecef_ft.x_ft, _ecef_prev[0], m_vECEF.x_fps);
+    calcVelocity(m_GPS.ecef_ft.y_ft, _ecef_prev[1], m_vECEF.y_fps);
+    calcVelocity(m_GPS.ecef_ft.z_ft, _ecef_prev[2], m_vECEF.z_fps);
+    _velocityValid_b = true;
+  }
+  _ecef_prev[0] = m_GPS.ecef_ft.x_ft;
+  _ecef_prev[1] = m_GPS.ecef_ft.y_ft;
+  _ecef_prev[2] = m_GPS.ecef_ft.z_ft;
+  _timeStampPrev_s = m_GPS.timeStamp_s;
 }
 
 void GPS::processInputs()
@@ -67,10 +82,12 @@ void GPS::processGNGGA(String s)
   m_GPS = {
       m_LLA,
       m_ECEF,
+      m_vECEF,
       _fields[1].toFloat(),
       _fields[6].toInt(),
       _fields[7].toInt(),
-      _fields[8].toFloat()};
+      _fields[8].toFloat(),
+      _velocityValid_b};
 }
 
 void GPS::splitNMEA(String s, String *fields, int maxFields)
@@ -111,4 +128,9 @@ void GPS::sendUBX(const uint8_t *msg, uint8_t len)
   }
   Serial3.flush();
   delay(_sendUBXDelay_ms);
+}
+
+void GPS::calcVelocity(double posCurrent_ft, double posPrevious_ft, double vel_ftps)
+{
+  vel_ftps = C.Common::filteredDerivative(posCurrent_ft, posPrevious_ft, vel_ftps, _alpha, dt_s);
 }

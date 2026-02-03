@@ -34,48 +34,59 @@ constexpr uint8_t UBX_SAVE[] = {
 class GPS
 {
 public:
-  GPS();
+    GPS(int sampleRate_Hz);
 
-  // public methods
-  void begin();
-  void step();
+    int sampleRate_Hz;
+    double dt_s;
 
-  // bus definitions
-  struct busGPS
-  {
-    Common::busLLA lla_ddft;
-    Common::busEcef ecef_ft;
-    double timeStamp_s;
-    int fixQuality;
-    int nSatellites;
-    double hdop;
-  };
+    // public methods
+    void begin();
+    void step();
 
-  Common::busLLA m_LLA = {0.0, 0.0, 0.0};
-  Common::busEcef m_ECEF = {0.0, 0.0, 0.0};
-  busGPS m_GPS = {m_LLA, m_ECEF, 0, 0, 0, 0.0};
+    // bus definitions
+    struct busGPS
+    {
+        Common::busLLA lla_ddft;
+        Common::busEcef ecef_ft;
+        Common::busvEcef vBE_E_fps;
+        double timeStamp_s;
+        int fixQuality;
+        int nSatellites;
+        double hdop;
+        bool velocityValid_b;
+    };
+
+    Common::busLLA m_LLA = {0.0, 0.0, 0.0};
+    Common::busEcef m_ECEF = {0.0, 0.0, 0.0};
+    Common::busvEcef m_vECEF = {0.0, 0.0, 0.0};
+    busGPS m_GPS = {m_LLA, m_ECEF, m_vECEF, 0.0, 0, 0, 0.0, false};
 
 private:
-  Common C;
-  Config cfg;
+    Common C;
+    Config cfg;
 
-  const int _sendUBXDelay_ms = 50;
-  char _c;
-  String _fields[15];
-  int _index;
-  int _dotIndex;
-  int _degLength;
-  double _deg;
-  double _min;
-  double _decimal;
+    const int _sendUBXDelay_ms = 50;
+    char _c;
+    String _fields[15];
+    int _index;
+    int _dotIndex;
+    int _degLength;
+    double _deg;
+    double _min;
+    double _decimal;
+    double _alpha;
+    double _timeStampPrev_s = 0.0;
+    double _ecef_prev[3] = {0.0, 0.0, 0.0};
+    bool _velocityValid_b = false;
 
-  const Config::gpsParams &gpsParams;
+    const Config::gpsParams &gpsParams;
 
-  void processInputs();
-  double convertToDecimalDegrees(String raw, String dir);
-  void splitNMEA(String s, String *fields, int maxFields);
-  void processGNGGA(String s);
-  void sendUBX(const uint8_t *msg, uint8_t len);
+    void processInputs();
+    double convertToDecimalDegrees(String raw, String dir);
+    void splitNMEA(String s, String *fields, int maxFields);
+    void processGNGGA(String s);
+    void sendUBX(const uint8_t *msg, uint8_t len);
+    void calcVelocity(double posCurrent_ft, double posPrevious_ft, double vel_ftps);
 };
 
 #endif // GPS_H

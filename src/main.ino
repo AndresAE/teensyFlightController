@@ -30,7 +30,7 @@ Stream &chooseSerial()
 
 Stream &serialPort = chooseSerial();
 IMU imu(fcsParams.sampleRate_Hz);
-GPS gps;
+GPS gps(fcsParams.sampleRate_Hz);
 NAV nav(fcsParams.sampleRate_Hz, imu, gps);
 TST tst(fcsParams.sampleRate_Hz);
 MSN msn(fcsParams.sampleRate_Hz, tst, imu);

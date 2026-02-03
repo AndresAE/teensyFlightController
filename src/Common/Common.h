@@ -27,6 +27,13 @@ public:
         double z_ft;
     };
 
+    struct busvEcef
+    {
+        double x_fps;
+        double y_fps;
+        double z_fps;
+    };
+
     struct busLLA
     {
         double latG_d;
