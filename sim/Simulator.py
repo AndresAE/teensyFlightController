@@ -33,8 +33,8 @@ class Simulator:
         self.update()
 
         # integrate
-        self.vBE_B_fps += self.aBE_B_fps2 * self.dt_s  # Update velocity in body frame (ft/s)
         self.xBE_E_ft += self.vBE_E_fps * self.dt_s  # Update position in ECEF frame (ft)
+        self.vBE_B_fps += self.aBE_B_fps2 * self.dt_s  # Update velocity in body frame (ft/s)
         self.wBI_B_rps += self.wBIdot_B_rps2 * self.dt_s  # Update angular velocity in body frame (rad/s)
         self.q += self.qDot * self.dt_s  # Update quaternion (assuming small angles for simplicity)
         self.lonEI_d = self.wEI_E_rps[2] * self.dt_s  # Update longitude due to Earth's rotation (deg)
@@ -285,26 +285,3 @@ class Simulator:
 
     def report(self):
         return f"state = {self.state:.3f}"
-
-
-def run_sim():
-    sim = Simulator()
-    sim.dt_s = 0.01  # Set the time step to 20 ms
-    sim.lla_ddft = np.array([0, 0, 40000.0])  # Initial LLA (San Francisco, 1000 ft altitude)
-    sim.vBE_B_fps = np.array([0.0, 80000.0, 0.0])  # Initial velocity in body frame (ft/s)
-    sim.euler_d = np.array([0.0, 0.0, 0.0])  # Initial orientation (roll, pitch, yaw in degrees)
-    sim.wBG_B_rps = -sim.ned_angular_velocity(sim.lla_ddft, sim.vBE_B_fps, sim.ned2bodyTransformation(sim.euler_d))-sim.E2B @ sim.wEI_E_rps  # Initial angular velocity in body frame (rad/s) to counteract NED rotation
-    sim.update()  # Update the simulation to initialize intermediate variables
-
-    g2b = sim.ned2bodyTransformation(sim.euler_d)  # Get the NED to body transformation matrix
-    sim.f_B_lbf = g2b @ np.array([0.0, 0.0, sim.mass_slug * 0])  # Apply gravity force in body frame (lbf)
-
-    t_sim_s = 0.0
-    while t_sim_s < 10.0:  # Run the simulation for 10 seconds
-        sim.step()  # Advance the simulation by one time step
-        print(f"HAE (ft): {sim.lla_ddft[2]:.2f}, Velocity (ft/s): {sim.vBE_B_fps[0]:.2f}, Lat (deg): {sim.lla_ddft[1]:.6f}, Pitch (deg): {sim.euler_d[0]:.2f}")
-        t_sim_s += sim.dt_s
-
-
-if __name__ == "__main__":
-    run_sim()
