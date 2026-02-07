@@ -55,7 +55,15 @@ public:
     double lowPassFilter(double x, double x_prev, double alpha);
     double filteredDerivative(double x, double x_prev, double derivPrev, double alpha, double dt_s);
     double primeVerticalRadiusOfCurvature(double latG_d);
+    double interpolate(matrix xArray, matrix yArray, double x);
+    double protectedDivide(double numerator, double denominator, double threshold = 1e-6);
 
+    matrix getNed2body(matrix ned2body, double roll_d, double pitch_d, double yaw_d);
+    matrix getBody2ned(matrix body2ned, double roll_d, double pitch_d, double yaw_d);
+    matrix getNed2ecef(matrix ned2ecef, double latG_d, double lon_d);
+    matrix getEcef2ned(matrix ecef2ned, double latG_d, double lon_d);
+    matrix getBody2ecef(matrix body2ecef, double latG_d, double lon_d, double roll_d, double pitch_d, double yaw_d);
+    matrix getEcef2body(matrix ecef2body, double latG_d, double lon_d, double roll_d, double pitch_d, double yaw_d);
     matrix matrixMultiply(matrix A, matrix B);
     matrix matrixAdd(matrix A, matrix B, bool negate_b = false);
     matrix matrixTranspose(matrix A);

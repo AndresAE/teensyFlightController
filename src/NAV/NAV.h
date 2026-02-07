@@ -22,9 +22,6 @@ public:
     void step();
     void predictState();
     void updateState();
-    void getNed2body();
-    void getNed2ecef();
-    void getBody2ecef();
     void posEcef2lla();
     void velEcef2ned();
     void velNed2body();

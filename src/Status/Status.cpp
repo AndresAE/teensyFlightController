@@ -64,7 +64,7 @@ void printStatus(Stream &serialPort, int now_ms, int endTime_ms, TST &tst, MSN &
     // gps block
     {
         String s;
-        s.reserve(160);
+        s.reserve(240);
         s += "gps: timeStamp_s=";
         s += String(gps.m_GPS.timeStamp_s);
         s += ", latG_d=";
@@ -79,6 +79,12 @@ void printStatus(Stream &serialPort, int now_ms, int endTime_ms, TST &tst, MSN &
         s += String(gps.m_ECEF.y_ft);
         s += ", ECEF_Z=";
         s += String(gps.m_ECEF.z_ft);
+        s += ", vECEF_X_fps=";
+        s += String(gps.m_vECEF.x_fps);
+        s += ", vECEF_Y_fps=";
+        s += String(gps.m_vECEF.y_fps);
+        s += ", vECEF_Z_fps=";
+        s += String(gps.m_vECEF.z_fps);
         s += ", fixQual=";
         s += String(gps.m_GPS.fixQuality);
         s += ", nSat=";

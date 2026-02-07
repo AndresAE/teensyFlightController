@@ -215,3 +215,101 @@ Common::matrix Common::crossProductMatrix(Common::matrix A, Common::matrix B)
   C.m[2][0] = A.m[0][0] * B.m[1][0] - A.m[1][0] * B.m[0][0];
   return C;
 }
+
+Common::matrix Common::getNed2body(Common::matrix ned2body, double roll_d, double pitch_d, double yaw_d)
+{
+  double pitch_r = pitch_d * DEG2RAD;
+  double yaw_r = yaw_d * DEG2RAD;
+  double roll_r = roll_d * DEG2RAD;
+
+  ned2body.m[0][0] = static_cast<float>(cos(pitch_r) * cos(yaw_r));
+  ned2body.m[0][1] = static_cast<float>(cos(pitch_r) * sin(yaw_r));
+  ned2body.m[0][2] = static_cast<float>(-sin(pitch_r));
+  ned2body.m[1][0] = static_cast<float>(sin(roll_r) * sin(pitch_r) * cos(yaw_r) - cos(roll_r) * sin(yaw_r));
+  ned2body.m[1][1] = static_cast<float>(sin(roll_r) * sin(pitch_r) * sin(yaw_r) + cos(roll_r) * cos(yaw_r));
+  ned2body.m[1][2] = static_cast<float>(sin(roll_r) * cos(pitch_r));
+  ned2body.m[2][0] = static_cast<float>(cos(roll_r) * sin(pitch_r) * cos(yaw_r) + sin(roll_r) * sin(yaw_r));
+  ned2body.m[2][1] = static_cast<float>(cos(roll_r) * sin(pitch_r) * sin(yaw_r) - sin(roll_r) * cos(yaw_r));
+  ned2body.m[2][2] = static_cast<float>(cos(roll_r) * cos(pitch_r));
+  return ned2body;
+}
+
+Common::matrix Common::getBody2ned(Common::matrix body2ned, double roll_d, double pitch_d, double yaw_d)
+{
+  Common::matrix ned2body = getNed2body(Common::matrix(), roll_d, pitch_d, yaw_d);
+  body2ned = matrixTranspose(ned2body);
+  return body2ned;
+}
+
+Common::matrix Common::getNed2ecef(Common::matrix ned2ecef, double latG_d, double lon_d)
+{
+  double lat = latG_d * DEG2RAD;
+  double lon = lon_d * DEG2RAD;
+
+  ned2ecef.m[0][0] = static_cast<float>(-sin(lat) * cos(lon));
+  ned2ecef.m[0][1] = static_cast<float>(-sin(lon));
+  ned2ecef.m[0][2] = static_cast<float>(-cos(lat) * cos(lon));
+  ned2ecef.m[1][0] = static_cast<float>(-sin(lat) * sin(lon));
+  ned2ecef.m[1][1] = static_cast<float>(cos(lon));
+  ned2ecef.m[1][2] = static_cast<float>(-cos(lat) * sin(lon));
+  ned2ecef.m[2][0] = static_cast<float>(cos(lat));
+  ned2ecef.m[2][1] = 0.0f;
+  ned2ecef.m[2][2] = static_cast<float>(-sin(lat));
+  return ned2ecef;
+}
+
+Common::matrix Common::getEcef2ned(Common::matrix ecef2ned, double latG_d, double lon_d)
+{
+  Common::matrix ned2ecef = getNed2ecef(Common::matrix(), latG_d, lon_d);
+  ecef2ned = matrixTranspose(ned2ecef);
+  return ecef2ned;
+}
+
+Common::matrix Common::getBody2ecef(Common::matrix body2ecef, double latG_d, double lon_d, double roll_d, double pitch_d, double yaw_d)
+{
+  Common::matrix ned2ecef = getNed2ecef(Common::matrix(), latG_d, lon_d);
+  Common::matrix ned2body = getNed2body(Common::matrix(), roll_d, pitch_d, yaw_d);
+  body2ecef = matrixMultiply(ned2ecef, matrixTranspose(ned2body));
+  return body2ecef;
+}
+
+Common::matrix Common::getEcef2body(Common::matrix ecef2body, double latG_d, double lon_d, double roll_d, double pitch_d, double yaw_d)
+{
+  Common::matrix body2ecef = getBody2ecef(Common::matrix(), latG_d, lon_d, roll_d, pitch_d, yaw_d);
+  ecef2body = matrixTranspose(body2ecef);
+  return ecef2body;
+}
+
+double Common::interpolate(Common::matrix xArray, Common::matrix yArray, double x)
+{
+  if (xArray.rows < 2)
+    return 0.0; // Not enough data points
+
+  int ii = 0;
+  while (ii < xArray.rows - 1 && xArray.m[ii][0] < x)
+    ii++;
+
+  // clamp ii to valid range
+  if (ii == 0)
+    return yArray.m[0][0]; // Return first value if x is less than first x value
+  if (ii == xArray.rows - 1)
+    return yArray.m[xArray.rows - 1][0]; // Return last value if x is greater than last x value
+
+  double x0 = xArray.m[ii - 1][0];
+  double y0 = yArray.m[ii - 1][0];
+  double x1 = xArray.m[ii][0];
+  double y1 = yArray.m[ii][0];
+
+  if (x1 - x0 == 0.0)
+    return y0; // avoid division by zero
+  return y0 + (y1 - y0) * (x - x0) / (x1 - x0);
+}
+
+double Common::protectedDivide(double numerator, double denominator, double threshold)
+{
+  if (fabs(denominator) < threshold)
+  {
+    return numerator >= 0.0 ? (numerator / threshold) : (numerator / -threshold);
+  }
+  return numerator / denominator;
+}

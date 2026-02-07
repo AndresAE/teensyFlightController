@@ -15,8 +15,8 @@ void NAV::begin()
     _Xmat.m[4][0] = 0.0f;
     _Xmat.m[5][0] = 0.0f;
 
-    getNed2body();
-    getBody2ecef();
+    _ned2bodyMatrix = C.getNed2body(_ned2bodyMatrix, m_IMU_obj.m_Euler.roll_d, m_IMU_obj.m_Euler.pitch_d, m_IMU_obj.m_Euler.yaw_d);
+    _body2ecefMatrix = C.getBody2ecef(_body2ecefMatrix, m_NAV.latG_d, m_NAV.lon_d, m_IMU_obj.m_Euler.roll_d, m_IMU_obj.m_Euler.pitch_d, m_IMU_obj.m_Euler.yaw_d);
 }
 
 void NAV::step()
@@ -33,8 +33,8 @@ void NAV::step()
 void NAV::predictState()
 {
     // transform gravity to ecef
-    getNed2body();
-    getBody2ecef();
+    _ned2bodyMatrix = C.getNed2body(_ned2bodyMatrix, m_IMU_obj.m_Euler.roll_d, m_IMU_obj.m_Euler.pitch_d, m_IMU_obj.m_Euler.yaw_d);
+    _body2ecefMatrix = C.getBody2ecef(_body2ecefMatrix, m_NAV.latG_d, m_NAV.lon_d, m_IMU_obj.m_Euler.roll_d, m_IMU_obj.m_Euler.pitch_d, m_IMU_obj.m_Euler.yaw_d);
     Common::matrix _gravityB_fps2 = C.matrixMultiply(_ned2bodyMatrix, _gravityNED_fps2);
     Common::matrix _w_rps = {3, 1, {{static_cast<float>(m_IMU_obj.m_IMU.states.angularRateX_dps * C.DEG2RAD)}, {static_cast<float>(m_IMU_obj.m_IMU.states.angularRateY_dps * C.DEG2RAD)}, {static_cast<float>(m_IMU_obj.m_IMU.states.angularRateZ_dps * C.DEG2RAD)}}};
 
@@ -75,45 +75,6 @@ void NAV::updateState()
     velNed2body();
 }
 
-void NAV::getNed2body()
-{
-    // NED to body frame transformation logic using IMU euler angles
-    double pitch = m_IMU_obj.m_IMU.euler.pitch_d;
-    double yaw = m_IMU_obj.m_IMU.euler.yaw_d;
-    double roll = m_IMU_obj.m_IMU.euler.roll_d;
-
-    _ned2bodyMatrix.m[0][0] = static_cast<float>(cos(pitch) * cos(yaw));
-    _ned2bodyMatrix.m[0][1] = static_cast<float>(cos(pitch) * sin(yaw));
-    _ned2bodyMatrix.m[0][2] = static_cast<float>(-sin(pitch));
-    _ned2bodyMatrix.m[1][0] = static_cast<float>(sin(roll) * sin(pitch) * cos(yaw) - cos(roll) * sin(yaw));
-    _ned2bodyMatrix.m[1][1] = static_cast<float>(sin(roll) * sin(pitch) * sin(yaw) + cos(roll) * cos(yaw));
-    _ned2bodyMatrix.m[1][2] = static_cast<float>(sin(roll) * cos(pitch));
-    _ned2bodyMatrix.m[2][0] = static_cast<float>(cos(roll) * sin(pitch) * cos(yaw) + sin(roll) * sin(yaw));
-    _ned2bodyMatrix.m[2][1] = static_cast<float>(cos(roll) * sin(pitch) * sin(yaw) - sin(roll) * cos(yaw));
-    _ned2bodyMatrix.m[2][2] = static_cast<float>(cos(roll) * cos(pitch));
-}
-
-void NAV::getNed2ecef()
-{
-    double lat = m_GPS_obj.m_GPS.lla_ddft.latG_d * C.DEG2RAD;
-    double lon = m_GPS_obj.m_GPS.lla_ddft.lon_d * C.DEG2RAD;
-    _ned2ecefMatrix.m[0][0] = static_cast<float>(-sin(lat) * cos(lon));
-    _ned2ecefMatrix.m[0][1] = static_cast<float>(-sin(lon));
-    _ned2ecefMatrix.m[0][2] = static_cast<float>(-cos(lat) * cos(lon));
-    _ned2ecefMatrix.m[1][0] = static_cast<float>(-sin(lat) * sin(lon));
-    _ned2ecefMatrix.m[1][1] = static_cast<float>(cos(lon));
-    _ned2ecefMatrix.m[1][2] = static_cast<float>(-cos(lat) * sin(lon));
-    _ned2ecefMatrix.m[2][0] = static_cast<float>(cos(lat));
-    _ned2ecefMatrix.m[2][1] = 0.0f;
-    _ned2ecefMatrix.m[2][2] = static_cast<float>(-sin(lat));
-}
-
-void NAV::getBody2ecef()
-{
-    getNed2ecef();
-    _body2ecefMatrix = C.matrixMultiply(_ned2ecefMatrix, C.matrixTranspose(_ned2bodyMatrix));
-}
-
 void NAV::posEcef2lla()
 {
     // ECEF to LLA conversion logic
@@ -125,7 +86,7 @@ void NAV::posEcef2lla()
 
 void NAV::velEcef2ned()
 {
-    getNed2ecef();
+    _ned2ecefMatrix = C.getNed2ecef(_ned2ecefMatrix, m_NAV.latG_d, m_NAV.lon_d);
     Common::matrix velECEF = {3, 1, {{static_cast<float>(m_NAV.vxECEF_fps)}, {static_cast<float>(m_NAV.vyECEF_fps)}, {static_cast<float>(m_NAV.vzECEF_fps)}}};
     Common::matrix velNED = C.matrixMultiply(_ned2ecefMatrix, velECEF);
     m_NAV.vN_fps = velNED.m[0][0];
@@ -135,7 +96,7 @@ void NAV::velEcef2ned()
 
 void NAV::velNed2body()
 {
-    getNed2body();
+    _ned2bodyMatrix = C.getNed2body(_ned2bodyMatrix, m_IMU_obj.m_Euler.roll_d, m_IMU_obj.m_Euler.pitch_d, m_IMU_obj.m_Euler.yaw_d);
     Common::matrix velNED = {3, 1, {{static_cast<float>(m_NAV.vN_fps)}, {static_cast<float>(m_NAV.vE_fps)}, {static_cast<float>(m_NAV.vD_fps)}}};
     Common::matrix velBody = C.matrixMultiply(C.matrixTranspose(_ned2bodyMatrix), velNED);
     m_NAV.u_fps2 = velBody.m[0][0];
