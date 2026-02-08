@@ -7,7 +7,7 @@ public:
     Config() {}
     struct fcsParams
     {
-        bool useTM_b = false;
+        bool useTM_b = true;
         int serialBaud = useTM_b ? 57600 : 9600;
         int sampleRate_Hz = 50;
         int tmDelay_ms = 5000;
@@ -83,12 +83,12 @@ public:
         double xRot_d = 180.0;
         double yRot_d = 0.0;
         double zRot_d = -90.0;
-        double cutoffAx_Hz = 20.0;
-        double cutoffAy_Hz = 20.0;
-        double cutoffAz_Hz = 20.0;
-        double cutoffGx_Hz = 20.0;
-        double cutoffGy_Hz = 20.0;
-        double cutoffGz_Hz = 20.0;
+        double cutoffAx_Hz = 5.0;
+        double cutoffAy_Hz = 5.0;
+        double cutoffAz_Hz = 5.0;
+        double cutoffGx_Hz = 5.0;
+        double cutoffGy_Hz = 5.0;
+        double cutoffGz_Hz = 5.0;
     };
     struct gpsParams
     {

@@ -65,6 +65,7 @@ public:
 
   busEulerRates m_eulerRate, m_eulerRatePrev;
   busStates m_States = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
+  busStates m_StatesRaw = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
   busEuler m_Euler = {0, 0, yaw0_d};
   busIMU m_IMU = {m_States, m_Euler};
 

@@ -31,21 +31,21 @@ void IMU::begin()
   {
     processStatesRaw();
 
-    _axPrev_fps2 += m_States.specificForceX_fps2;
-    _ayPrev_fps2 += m_States.specificForceY_fps2;
-    _azPrev_fps2 += m_States.specificForceZ_fps2;
+    _axPrev_fps2 += m_StatesRaw.specificForceX_fps2;
+    _ayPrev_fps2 += m_StatesRaw.specificForceY_fps2;
+    _azPrev_fps2 += m_StatesRaw.specificForceZ_fps2;
 
-    _gyroX_offsetSum_dps += m_States.angularRateX_dps;
-    _gyroY_offsetSum_dps += m_States.angularRateY_dps;
-    _gyroZ_offsetSum_dps += m_States.angularRateZ_dps;
+    _gyroX_offsetSum_dps += m_StatesRaw.angularRateX_dps;
+    _gyroY_offsetSum_dps += m_StatesRaw.angularRateY_dps;
+    _gyroZ_offsetSum_dps += m_StatesRaw.angularRateZ_dps;
 
     // roll and angle
-    _tmpPitch_d = asin(m_States.specificForceX_fps2 / C.GRAVITY_fps2) * C.RAD2DEG;
+    _tmpPitch_d = asin(m_StatesRaw.specificForceX_fps2 / C.GRAVITY_fps2) * C.RAD2DEG;
     m_Euler.pitch_d += _tmpPitch_d;
-    m_Euler.roll_d += asin(-m_States.specificForceY_fps2 / (C.GRAVITY_fps2 * cos(_tmpPitch_d * C.DEG2RAD))) * C.RAD2DEG;
+    m_Euler.roll_d += asin(-m_StatesRaw.specificForceY_fps2 / (C.GRAVITY_fps2 * cos(_tmpPitch_d * C.DEG2RAD))) * C.RAD2DEG;
 
     // acceleration magnitude scaling
-    _accelMagnitudeScalingSum += C.GRAVITY_fps2 / C.norm(m_States.specificForceX_fps2, m_States.specificForceY_fps2, m_States.specificForceZ_fps2);
+    _accelMagnitudeScalingSum += C.GRAVITY_fps2 / C.norm(m_StatesRaw.specificForceX_fps2, m_StatesRaw.specificForceY_fps2, m_StatesRaw.specificForceZ_fps2);
   };
 
   m_Euler.pitch_d = m_Euler.pitch_d / static_cast<double>(imuParams.nInit);
@@ -57,18 +57,21 @@ void IMU::begin()
   _axPrev_fps2 = _accelMagnitudeScaling * _axPrev_fps2 / static_cast<double>(imuParams.nInit);
   _ayPrev_fps2 = _accelMagnitudeScaling * _ayPrev_fps2 / static_cast<double>(imuParams.nInit);
   _azPrev_fps2 = _accelMagnitudeScaling * _azPrev_fps2 / static_cast<double>(imuParams.nInit);
+  m_States = m_StatesRaw;
+  m_IMU = {m_States, m_Euler};
 }
+
 void IMU::step()
 {
   processStatesRaw();
 
   // filtering
-  m_States.angularRateX_dps = C.lowPassFilter(m_States.angularRateX_dps, _gxPrev_dps, _alphaGx);
-  m_States.angularRateY_dps = C.lowPassFilter(m_States.angularRateY_dps, _gyPrev_dps, _alphaGy);
-  m_States.angularRateZ_dps = C.lowPassFilter(m_States.angularRateZ_dps, _gzPrev_dps, _alphaGz);
-  m_States.specificForceX_fps2 = C.lowPassFilter(m_States.specificForceX_fps2, _axPrev_fps2, _alphaAx);
-  m_States.specificForceY_fps2 = C.lowPassFilter(m_States.specificForceY_fps2, _ayPrev_fps2, _alphaAy);
-  m_States.specificForceZ_fps2 = C.lowPassFilter(m_States.specificForceZ_fps2, _azPrev_fps2, _alphaAz);
+  m_States.angularRateX_dps = C.lowPassFilter(m_StatesRaw.angularRateX_dps, _gxPrev_dps, _alphaGx);
+  m_States.angularRateY_dps = C.lowPassFilter(m_StatesRaw.angularRateY_dps, _gyPrev_dps, _alphaGy);
+  m_States.angularRateZ_dps = C.lowPassFilter(m_StatesRaw.angularRateZ_dps, _gzPrev_dps, _alphaGz);
+  m_States.specificForceX_fps2 = C.lowPassFilter(m_StatesRaw.specificForceX_fps2, _axPrev_fps2, _alphaAx);
+  m_States.specificForceY_fps2 = C.lowPassFilter(m_StatesRaw.specificForceY_fps2, _ayPrev_fps2, _alphaAy);
+  m_States.specificForceZ_fps2 = C.lowPassFilter(m_StatesRaw.specificForceZ_fps2, _azPrev_fps2, _alphaAz);
 
   // euler angle integration
   // precompute trig to avoid repeated calls
@@ -104,7 +107,7 @@ void IMU::processStatesRaw()
   readVector(BNO055_GYRO_DATA_X_LSB, _gxRaw, _gyRaw, _gzRaw);
   rotateRaw();
 
-  m_States = {
+  m_StatesRaw = {
       _gxRaw * imuParams.gyro_LSB + _gyroX_offset_dps,
       _gyRaw * imuParams.gyro_LSB + _gyroY_offset_dps,
       _gzRaw * imuParams.gyro_LSB + _gyroZ_offset_dps,

@@ -41,3 +41,4 @@
 - [ ] GPS significant figures
 - [x] move transformation matrices to common
 - [ ] Improve matrix definitions/overwrites
+- [x] consolidate status prints? 
