@@ -11,10 +11,10 @@
 Config cfg;
 Config::fcsParams fcsParams = cfg.getFcsParams();
 int nextTask_ms = 0;
-int next10Hz_ms = 0;
+int next5Hz_ms = 0;
 int now_ms;
 int dt_ms = 0;
-int dt10Hz_ms = 100;
+int dt5Hz_ms = 200;
 int endTime_ms = 0;
 
 Stream &chooseSerial()
@@ -69,7 +69,7 @@ void setup()
 
   dt_ms = static_cast<int>(1000 / fcsParams.sampleRate_Hz);
   nextTask_ms = millis() + dt_ms;
-  next10Hz_ms = millis() + dt10Hz_ms;
+  next5Hz_ms = millis() + dt5Hz_ms;
   serialPort.println("----- Starting Flight Loop -----");
 }
 
@@ -88,10 +88,14 @@ void loop()
     // nav.step();
     endTime_ms = millis();
 
-    if (endTime_ms >= next10Hz_ms)
+    if (endTime_ms >= next5Hz_ms)
     {
       printStatusTM(serialPort, now_ms, endTime_ms, tst, msn, imu, gps, nav, gdc, apt);
-      next10Hz_ms += dt10Hz_ms;
+      next5Hz_ms += dt5Hz_ms;
+    }
+    else if (!fcsParams.useTM_b)
+    {
+      printStatus(serialPort, now_ms, endTime_ms, tst, msn, imu, gps, nav, gdc, apt);
     }
     nextTask_ms += dt_ms;
   };

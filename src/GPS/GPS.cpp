@@ -75,7 +75,7 @@ void GPS::processGNGGA(String s)
   m_LLA = {
       convertToDecimalDegrees(_fields[2], _fields[3]),
       convertToDecimalDegrees(_fields[4], _fields[5]),
-      (_fields[9].toFloat() + _fields[10].toFloat()) * C.M2FT};
+      (_fields[9].toFloat() + _fields[11].toFloat()) * C.M2FT};
 
   m_ECEF = C.lla2ecef(m_LLA);
 
