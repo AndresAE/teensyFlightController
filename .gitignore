@@ -6,3 +6,5 @@
 test/tm/telemetry_log.txt
 .vscode/
 *.exe
+tm/data/
+*.pyc

@@ -1,4 +1,4 @@
-![image not loaded](../doc/teensyFlightControlPic.png)
+![image not loaded](doc/teensyFlightControlPic.png)
 
 # flightControlTeensy
 

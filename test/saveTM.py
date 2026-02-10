@@ -12,7 +12,7 @@ os.makedirs("tm", exist_ok=True)
 
 # create filename with current datetime
 timestamp_file = datetime.now().strftime("%Y%m%d_%H%M%S")
-filename = f"tm/telemetry_log_{timestamp_file}.txt"
+filename = f"tm/data/telemetry_log_{timestamp_file}.txt"
 
 # Open output file
 with open(filename, "a") as f:
