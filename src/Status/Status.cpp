@@ -176,11 +176,14 @@ void printStatus(Stream &serialPort, int now_ms, int endTime_ms, TST &tst, MSN &
         s += "gps: timeStamp_s=";
         s += String(gps.m_GPS.timeStamp_s);
         s += ", latG_d=";
-        s += String(gps.m_GPS.lla_ddft.latG_d);
+        snprintf(buf, sizeof(buf), "%.10g", gps.m_GPS.lla_ddft.latG_d);
+        s += buf;
         s += ", lon_d=";
-        s += String(gps.m_GPS.lla_ddft.lon_d);
+        snprintf(buf, sizeof(buf), "%.10g", gps.m_GPS.lla_ddft.lon_d);
+        s += buf;
         s += ", HAE_ft=";
-        s += String(gps.m_GPS.lla_ddft.hae_ft);
+        snprintf(buf, sizeof(buf), "%.10g", gps.m_GPS.lla_ddft.hae_ft);
+        s += buf;
         s += ", ECEF_X=";
         s += String(gps.m_ECEF.x_ft);
         s += ", ECEF_Y=";

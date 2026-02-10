@@ -15,7 +15,7 @@ void GPS::begin()
   {
   }; // Wait for serial
 
-  C.calcAlpha(gpsParams.cutoff_Hz, dt_s);
+  _alpha = C.calcAlpha(gpsParams.cutoff_Hz, dt_s);
 
   sendUBX(UBX_DISABLE_GLL, sizeof(UBX_DISABLE_GLL));
   sendUBX(UBX_DISABLE_GSA, sizeof(UBX_DISABLE_GSA));
@@ -28,18 +28,25 @@ void GPS::begin()
   sendUBX(UBX_SAVE, sizeof(UBX_SAVE));
 
   delay(gpsParams.boot_time_ms);
+
+  processInputs();
+  _ecef_prev[0] = m_GPS.ecef_ft.x_ft;
+  _ecef_prev[1] = m_GPS.ecef_ft.y_ft;
+  _ecef_prev[2] = m_GPS.ecef_ft.z_ft;
+  _timeStampPrev_s = m_GPS.timeStamp_s;
 }
 
 void GPS::step()
 {
   _velocityValid_b = false;
   processInputs();
+  gpsGood_b = m_GPS.nSatellites >= gpsParams.min_satellites && m_GPS.hdop <= gpsParams.max_hdop;
 
-  if (m_GPS.timeStamp_s - _timeStampPrev_s <= gpsParams.dt_gps_s)
+  if (gpsGood_b && (m_GPS.timeStamp_s - _timeStampPrev_s) > 0.0)
   {
-    calcVelocity(m_GPS.ecef_ft.x_ft, _ecef_prev[0], m_vECEF.x_fps);
-    calcVelocity(m_GPS.ecef_ft.y_ft, _ecef_prev[1], m_vECEF.y_fps);
-    calcVelocity(m_GPS.ecef_ft.z_ft, _ecef_prev[2], m_vECEF.z_fps);
+    m_vECEF.x_fps = C.Common::filteredDerivative(m_GPS.ecef_ft.x_ft, _ecef_prev[0], m_vECEF.x_fps, _alpha, dt_s);
+    m_vECEF.y_fps = C.Common::filteredDerivative(m_GPS.ecef_ft.y_ft, _ecef_prev[1], m_vECEF.y_fps, _alpha, dt_s);
+    m_vECEF.z_fps = C.Common::filteredDerivative(m_GPS.ecef_ft.z_ft, _ecef_prev[2], m_vECEF.z_fps, _alpha, dt_s);
     _velocityValid_b = true;
   }
   _ecef_prev[0] = m_GPS.ecef_ft.x_ft;
@@ -128,9 +135,4 @@ void GPS::sendUBX(const uint8_t *msg, uint8_t len)
   }
   Serial3.flush();
   delay(_sendUBXDelay_ms);
-}
-
-void GPS::calcVelocity(double posCurrent_ft, double posPrevious_ft, double vel_ftps)
-{
-  vel_ftps = C.Common::filteredDerivative(posCurrent_ft, posPrevious_ft, vel_ftps, _alpha, dt_s);
 }

@@ -14,7 +14,7 @@ int nextTask_ms = 0;
 int next5Hz_ms = 0;
 int now_ms;
 int dt_ms = 0;
-int dt5Hz_ms = 200;
+int dt5Hz_ms = 0;
 int endTime_ms = 0;
 
 Stream &chooseSerial()
@@ -31,7 +31,7 @@ Stream &chooseSerial()
 
 Stream &serialPort = chooseSerial();
 IMU imu(fcsParams.sampleRate_Hz);
-GPS gps(fcsParams.sampleRate_Hz);
+GPS gps(fcsParams.sampleRateLo_Hz);
 NAV nav(fcsParams.sampleRate_Hz, imu, gps);
 TST tst(fcsParams.sampleRate_Hz);
 MSN msn(fcsParams.sampleRate_Hz, tst, imu);
@@ -68,6 +68,7 @@ void setup()
   apt.begin();
 
   dt_ms = static_cast<int>(1000 / fcsParams.sampleRate_Hz);
+  dt5Hz_ms = static_cast<int>(1000 / fcsParams.sampleRateLo_Hz);
   nextTask_ms = millis() + dt_ms;
   next5Hz_ms = millis() + dt5Hz_ms;
   serialPort.println("----- Starting Flight Loop -----");
@@ -82,21 +83,26 @@ void loop()
     tst.step();
     msn.step();
     imu.step();
-    gps.step();
     gdc.step();
     apt.step();
+    gps.step();
     // nav.step();
     endTime_ms = millis();
 
     if (endTime_ms >= next5Hz_ms)
     {
-      printStatusTM(serialPort, now_ms, endTime_ms, tst, msn, imu, gps, nav, gdc, apt);
+      if (fcsParams.useTM_b)
+      {
+        printStatusTM(serialPort, now_ms, endTime_ms, tst, msn, imu, gps, nav, gdc, apt);
+      }
       next5Hz_ms += dt5Hz_ms;
     }
-    else if (!fcsParams.useTM_b)
+
+    if (!fcsParams.useTM_b)
     {
       printStatus(serialPort, now_ms, endTime_ms, tst, msn, imu, gps, nav, gdc, apt);
     }
+
     nextTask_ms += dt_ms;
   };
 };

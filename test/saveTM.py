@@ -1,7 +1,7 @@
 import serial
 from datetime import datetime
 
-port = "COM3"   # or "COM3" on Windows
+port = "COM5"   # or "COM3" on Windows
 baud = 57600
 
 ser = serial.Serial(port, baud, timeout=1)

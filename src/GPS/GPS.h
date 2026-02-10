@@ -38,6 +38,7 @@ public:
 
     int sampleRate_Hz;
     double dt_s;
+    bool gpsGood_b;
 
     // public methods
     void begin();
@@ -78,6 +79,7 @@ private:
     double _timeStampPrev_s = 0.0;
     double _ecef_prev[3] = {0.0, 0.0, 0.0};
     bool _velocityValid_b = false;
+    double _vel_ftps;
 
     const Config::gpsParams &gpsParams;
 
@@ -86,7 +88,6 @@ private:
     void splitNMEA(String s, String *fields, int maxFields);
     void processGNGGA(String s);
     void sendUBX(const uint8_t *msg, uint8_t len);
-    void calcVelocity(double posCurrent_ft, double posPrevious_ft, double vel_ftps);
 };
 
 #endif // GPS_H

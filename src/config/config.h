@@ -7,9 +7,10 @@ public:
     Config() {}
     struct fcsParams
     {
-        bool useTM_b = true;
+        bool useTM_b = false;
         int serialBaud = useTM_b ? 57600 : 9600;
         int sampleRate_Hz = 50;
+        int sampleRateLo_Hz = 5;
         int tmDelay_ms = 5000;
     };
     struct busGains
@@ -95,7 +96,9 @@ public:
         int gps_baud = 9600;
         int boot_time_ms = 2000;
         double dt_gps_s = 0.25;
-        double cutoff_Hz = 20.0;
+        double cutoff_Hz = 0.5;
+        int min_satellites = 6;
+        double max_hdop = 1.5;
     };
     struct gdcParams
     {
