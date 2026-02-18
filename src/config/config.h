@@ -45,14 +45,14 @@ public:
     struct aptParams
     {
         busAptGains gains = {
-            {1.0, 0.0, 0.0, 0.0, 0.0},  // roll, k_p, k_i, k_f, k_antiWindup
-            {0.5, 0.0, 0.0, 0.0, 0.0},  // rollRate, k_p, k_i, k_f, k_antiWindup
-            {1.0, 0.0, 0.0, 0.0, 0.0},  // pitch, k_p, k_i, k_f, k_antiWindup
-            {1.0, 0.0, 0.0, 0.0, 0.0},  // pitchRate, k_p, k_i, k_f, k_antiWindup
-            {-0.5, 0.0, 0.0, 0.0, 0.0}, // nz, k_p, k_i, k_f
-            {1.0, 0.0, 0.0, 0.0, 0.0},  // heading,
+            {0.0, 0.0, 0.0, 0.0, 0.0},  // roll, k_p, k_i, k_f, k_antiWindup
+            {0.0, 0.1, 1.0, 0.0, 0.0},  // rollRate, k_p, k_i, k_f, k_antiWindup
+            {0.0, 0.0, 0.0, 0.0, 0.0},  // pitch, k_p, k_i, k_f, k_antiWindup
+            {0.0, 0.1, 1.0, 0.0, 0.0},  // pitchRate, k_p, k_i, k_f, k_antiWindup
+            {-1.0, 0.0, 0.0, 0.0, 0.0}, // nz, k_p, k_i, k_f
+            {0.0, 0.0, 0.0, 0.0, 0.0},  // heading,
             {1.0, 0.0, 0.0, 0.0, 0.0},  // ny, k_p, k_i, k_f, k_antiWindup
-            {1.0, 0.0, 0.0, 0.0, 0.0}}; // yawRate, k_p, k_i, k_f, k_antiWindup
+            {0.0, 0.1, 1.0, 0.0, 0.0}}; // yawRate, k_p, k_i, k_f, k_antiWindup
         bool integratorOff_b = true;
         double effectorLimitHi[5] = {20.0, 20.0, 20.0, 20.0, 1.0};
         double effectorLimitLo[5] = {-20.0, -20.0, -20.0, -20.0, 0.0};
@@ -65,7 +65,7 @@ public:
             {1.0, 0.0, 0.3},   // left aileron (+LTED)
             {-1.0, 0.0, -0.3}, // right aileron (+RTEU)
             {0.0, 1.0, 0.0},   // elevator (+TEU)
-            {0.6, 0.0, 2.0},   // rudder (+TER)
+            {0.3, 0.0, 1.0},   // rudder (+TER)
             {0.0, 0.0, 0.0}};  // throttle
         double mixingRatioLinear[5][3] = {
             {0.0, 0.0, 0.0},  // left aileron (+LTED)

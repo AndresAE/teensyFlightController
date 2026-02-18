@@ -8,3 +8,4 @@ test/tm/telemetry_log.txt
 *.exe
 tm/data/
 *.pyc
+*.png
