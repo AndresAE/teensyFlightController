@@ -54,22 +54,20 @@ public:
             {1.0, 0.0, 0.0, 0.0, 0.0},  // ny, k_p, k_i, k_f, k_antiWindup
             {0.0, 0.1, 1.0, 0.0, 0.0}}; // yawRate, k_p, k_i, k_f, k_antiWindup
         bool integratorOff_b = true;
-        double effectorLimitHi[5] = {20.0, 20.0, 20.0, 20.0, 1.0};
-        double effectorLimitLo[5] = {-20.0, -20.0, -20.0, -20.0, 0.0};
-        double effectorOffset[5] = {90.0, 90.0, 90.0, 90.0, 0.0};
-        int effectorPins[5] = {7, 8, 9, 10, 11};
-        int muMax_us[5] = {2500, 2500, 2500, 2500, 2000}; // microseconds
-        int muMin_us[5] = {500, 500, 500, 500, 1000};     // microseconds
-        double servoRange_d[5] = {180.0, 180.0, 180.0, 180.0, 1.0};
-        double mixingRatioRotational[5][3] = {
-            {1.0, 0.0, 0.3},   // left aileron (+LTED)
-            {-1.0, 0.0, -0.3}, // right aileron (+RTEU)
-            {0.0, 1.0, 0.0},   // elevator (+TEU)
-            {0.3, 0.0, 1.0},   // rudder (+TER)
-            {0.0, 0.0, 0.0}};  // throttle
-        double mixingRatioLinear[5][3] = {
-            {0.0, 0.0, 0.0},  // left aileron (+LTED)
-            {0.0, 0.0, 0.0},  // right aileron (+RTEU)
+        double effectorLimitHi[4] = {20.0, 20.0, 20.0, 1.0};
+        double effectorLimitLo[4] = {-20.0, -20.0, -20.0, 0.0};
+        double effectorOffset[4] = {90.0, 90.0, 90.0, 0.0};
+        int effectorPins[4] = {7, 8, 9, 10};
+        int muMax_us[4] = {2500, 2500, 2500, 2000}; // microseconds
+        int muMin_us[4] = {500, 500, 500, 1000};    // microseconds
+        double servoRange_d[4] = {180.0, 180.0, 180.0, 1.0};
+        double mixingRatioRotational[4][3] = {
+            {1.0, 0.0, 0.3},  // aileron (+LTED)
+            {0.0, 1.0, 0.0},  // elevator (+TEU)
+            {0.3, 0.0, 1.0},  // rudder (+TER)
+            {0.0, 0.0, 0.0}}; // throttle
+        double mixingRatioLinear[4][3] = {
+            {0.0, 0.0, 0.0},  // aileron (+LTED)
             {0.0, 0.0, 0.0},  // elevator (+TEU)
             {0.0, 0.0, 0.0},  // rudder (+TER)
             {1.0, 0.0, 0.0}}; // throttle

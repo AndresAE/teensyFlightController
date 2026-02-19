@@ -14,7 +14,6 @@ void APT::begin()
   m_APT.effectorCmd[1] = aptParams.effectorOffset[1];
   m_APT.effectorCmd[2] = aptParams.effectorOffset[2];
   m_APT.effectorCmd[3] = aptParams.effectorOffset[3];
-  m_APT.effectorCmd[4] = aptParams.effectorOffset[4];
 }
 
 void APT::step()
@@ -22,6 +21,7 @@ void APT::step()
   if (m_MSN_obj.missionPhase_e == MSN::fcsMissionPhase::MSN_DIRECT)
   {
     evalDirect();
+    setEffectors();
   }
   else
   {
@@ -31,6 +31,7 @@ void APT::step()
     evalSpeed();
 
     controlAllocation();
+    applyLimits();
     setEffectors();
   }
 }
@@ -62,9 +63,9 @@ void APT::evalSpeed()
 void APT::evalDirect()
 {
   // In direct mode, APT does not modify commands; they are passed through from TST to effectors
-  for (int i = 0; i < _nEffectors; i++)
+  for (int ii = 0; ii < _nEffectors; ii++)
   {
-    _servos[i].writeMicroseconds(m_TST_obj.m_TST.controlIn_us[i]);
+    m_APT.effectorCmd[ii] = ((static_cast<double>(m_TST_obj.m_TST.controlIn_us[ii]) - aptParams.muMin_us[ii]) / (aptParams.muMax_us[ii] - aptParams.muMin_us[ii])) * aptParams.servoRange_d[ii];
   }
 
   _prevRollState_e = GDC::gdcRollMode::GRM_UNDEFINED;
@@ -273,7 +274,10 @@ void APT::controlAllocation()
       m_APT.effectorCmd[ii] += aptParams.mixingRatioLinear[ii][jj] * linearPseudoEffector[jj];
     }
   }
+}
 
+void APT::applyLimits()
+{
   for (int ii = 0; ii < _nEffectors; ii++)
   {
     // apply limits and offsets

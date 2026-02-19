@@ -40,6 +40,7 @@ public:
   void speedInnerLoop();
   void controlAllocation();
   void setupEffectors();
+  void applyLimits();
   void setEffectors();
   double proportionalControl(double k_p, double cvc, double cv);
 
@@ -57,7 +58,7 @@ public:
     double axialEffectorCmd;
     double lateralEffectorCmd;
     double normalEffectorCmd;
-    double effectorCmd[5];
+    double effectorCmd[4];
   };
 
   busAPT m_APT;
@@ -95,8 +96,8 @@ private:
   int _loopTime_us;
   int _pulse_us;
   int _init_us;
-  bool _effectorOnLimit_b[5] = {false, false, false, false, false};
-  Servo _servos[5];
+  bool _effectorOnLimit_b[4] = {false, false, false, false};
+  Servo _servos[4];
 };
 
 #endif // APT_H
