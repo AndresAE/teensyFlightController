@@ -58,14 +58,15 @@ public:
         double effectorLimitLo[4] = {-20.0, -20.0, -20.0, 0.0};
         double effectorOffset[4] = {90.0, 90.0, 90.0, 0.0};
         int effectorPins[4] = {7, 8, 9, 10};
-        int muMax_us[4] = {2500, 2500, 2500, 2000}; // microseconds
-        int muMin_us[4] = {500, 500, 500, 1000};    // microseconds
+        int muMax_us[4] = {2500, 2500, 2500, 2000};        // microseconds
+        int muMin_us[4] = {500, 500, 500, 1000};           // microseconds
+        double directModeGain[4] = {0.5, -0.5, -0.5, 1.2}; // scale factor from control input to effector command in direct mode
         double servoRange_d[4] = {180.0, 180.0, 180.0, 1.0};
         double mixingRatioRotational[4][3] = {
-            {1.0, 0.0, 0.3},  // aileron (+LTED)
-            {0.0, 1.0, 0.0},  // elevator (+TEU)
-            {0.3, 0.0, 1.0},  // rudder (+TER)
-            {0.0, 0.0, 0.0}}; // throttle
+            {-1.0, 0.0, -0.2}, // aileron
+            {0.0, 1.0, 0.0},   // elevator
+            {0.2, 0.0, 1.0},   // rudder (+TER)
+            {0.0, 0.0, 0.0}};  // throttle
         double mixingRatioLinear[4][3] = {
             {0.0, 0.0, 0.0},  // aileron (+LTED)
             {0.0, 0.0, 0.0},  // elevator (+TEU)

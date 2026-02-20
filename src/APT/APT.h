@@ -96,6 +96,7 @@ private:
   int _loopTime_us;
   int _pulse_us;
   int _init_us;
+  double _meanPWM;
   bool _effectorOnLimit_b[4] = {false, false, false, false};
   Servo _servos[4];
 };

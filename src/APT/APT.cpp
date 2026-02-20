@@ -65,7 +65,8 @@ void APT::evalDirect()
   // In direct mode, APT does not modify commands; they are passed through from TST to effectors
   for (int ii = 0; ii < _nEffectors; ii++)
   {
-    m_APT.effectorCmd[ii] = ((static_cast<double>(m_TST_obj.m_TST.controlIn_us[ii]) - aptParams.muMin_us[ii]) / (aptParams.muMax_us[ii] - aptParams.muMin_us[ii])) * aptParams.servoRange_d[ii];
+    _meanPWM = (aptParams.muMin_us[ii] + aptParams.muMax_us[ii]) / 2;
+    m_APT.effectorCmd[ii] = (((aptParams.directModeGain[ii] * (static_cast<double>(m_TST_obj.m_TST.controlIn_us[ii]) - _meanPWM) + _meanPWM) - aptParams.muMin_us[ii]) / (aptParams.muMax_us[ii] - aptParams.muMin_us[ii])) * aptParams.servoRange_d[ii];
   }
 
   _prevRollState_e = GDC::gdcRollMode::GRM_UNDEFINED;
