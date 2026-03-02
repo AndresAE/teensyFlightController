@@ -1,11 +1,11 @@
+import os
 import serial
 from datetime import datetime
 
-port = "COM5"   # or "COM3" on Windows
+port = "COM3"   # or "COM3" on Windows
 baud = 57600
 
 ser = serial.Serial(port, baud, timeout=1)
-import os
 
 # ensure tm directory exists
 os.makedirs("tm", exist_ok=True)

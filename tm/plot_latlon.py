@@ -5,6 +5,7 @@ import re
 import matplotlib.pyplot as plt
 from pathlib import Path
 
+
 def parse_telemetry_log(log_file):
     """Parse telemetry log and extract GPS data (lat/lon), vECEF components, and HAE"""
     latitudes = []
@@ -45,6 +46,7 @@ def parse_telemetry_log(log_file):
                 heights.append(hae)
 
     return latitudes, longitudes, vX, vY, vZ, heights
+
 
 def plot_latlon(log_file):
     """Plot latitude/longitude trajectory, vECEF components, and HAE"""
@@ -112,9 +114,10 @@ def plot_latlon(log_file):
     plt.tight_layout()
     plt.show()
 
+
 if __name__ == '__main__':
     # Use the telemetry log from the tm directory
-    log_file = Path(__file__).parent / 'data/telemetry_log_20260209_220232.txt'
+    log_file = Path(__file__).parent / 'data/telemetry_log_20260301_164732.txt'
 
     if log_file.exists():
         plot_latlon(log_file)

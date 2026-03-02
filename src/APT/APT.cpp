@@ -21,6 +21,7 @@ void APT::step()
   if (m_MSN_obj.missionPhase_e == MSN::fcsMissionPhase::MSN_DIRECT)
   {
     evalDirect();
+    applyLimits();
     setEffectors();
   }
   else
@@ -66,7 +67,7 @@ void APT::evalDirect()
   for (int ii = 0; ii < _nEffectors; ii++)
   {
     _meanPWM = (aptParams.muMin_us[ii] + aptParams.muMax_us[ii]) / 2;
-    m_APT.effectorCmd[ii] = (((aptParams.directModeGain[ii] * (static_cast<double>(m_TST_obj.m_TST.controlIn_us[ii]) - _meanPWM) + _meanPWM) - aptParams.muMin_us[ii]) / (aptParams.muMax_us[ii] - aptParams.muMin_us[ii])) * aptParams.servoRange_d[ii];
+    m_APT.effectorCmd[ii] = (((aptParams.directModeGain[ii] * (static_cast<double>(m_TST_obj.m_TST.controlIn_us[ii]) - _meanPWM) + _meanPWM) - aptParams.muMin_us[ii]) / (aptParams.muMax_us[ii] - aptParams.muMin_us[ii])) * aptParams.servoRange_d[ii] - aptParams.effectorOffset[ii];
   }
 
   _prevRollState_e = GDC::gdcRollMode::GRM_UNDEFINED;

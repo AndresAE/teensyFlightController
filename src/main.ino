@@ -51,7 +51,6 @@ void setup()
   {
     Serial.begin(fcsParams.serialBaud);
   }
-
   serialPort.println("----- Starting TST -----");
   tst.begin();
   serialPort.println("----- Starting MSN -----");
@@ -77,7 +76,6 @@ void setup()
 void loop()
 {
   now_ms = millis();
-
   if (now_ms >= nextTask_ms)
   {
     tst.step();
@@ -88,7 +86,6 @@ void loop()
     gps.step();
     // nav.step();
     endTime_ms = millis();
-
     if (endTime_ms >= next5Hz_ms)
     {
       if (fcsParams.useTM_b)
@@ -97,12 +94,10 @@ void loop()
       }
       next5Hz_ms += dt5Hz_ms;
     }
-
     if (!fcsParams.useTM_b)
     {
       printStatus(serialPort, now_ms, endTime_ms, tst, msn, imu, gps, nav, gdc, apt);
     }
-
     nextTask_ms += dt_ms;
   };
 };
