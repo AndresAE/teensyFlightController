@@ -63,14 +63,14 @@ public:
         double directModeGain[4] = {-0.5, 0.5, 0.5, 1.25}; // scale factor from control input to effector command in direct mode
         double servoRange_d[4] = {180.0, 180.0, 180.0, 1.0};
         double mixingRatioRotational[4][3] = {
-            {1.0, 0.0, 0.2},  // aileron
-            {0.0, 1.0, 0.0},  // elevator
-            {0.2, 0.0, 1.0},  // rudder (+TER)
+            {1.0, 0.0, 0.2},  // aileron (+LTED)
+            {0.0, 1.0, 0.0},  // elevator (+TED)
+            {0.2, 0.0, 1.0},  // rudder (+TEL)
             {0.0, 0.0, 0.0}}; // throttle
         double mixingRatioLinear[4][3] = {
             {0.0, 0.0, 0.0},  // aileron (+LTED)
-            {0.0, 0.0, 0.0},  // elevator (+TEU)
-            {0.0, 0.0, 0.0},  // rudder (+TER)
+            {0.0, 0.0, 0.0},  // elevator (+TED)
+            {0.0, 0.0, 0.0},  // rudder (+TEL)
             {1.0, 0.0, 0.0}}; // throttle
     };
     struct imuParams
