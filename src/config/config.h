@@ -45,14 +45,14 @@ public:
     struct aptParams
     {
         busAptGains gains = {
-            {0.0, 0.0, 0.0, 0.0, 0.0},          // roll, k_p, k_i, k_f, k_antiWindup
-            {0.0, 0.5, 0.5 * 2.5, 0.0, 0.0},    // rollRate, k_p, k_i, k_f, k_antiWindup
-            {0.0, 0.0, 0.0, 0.0, 0.0},          // pitch, k_p, k_i, k_f, k_antiWindup
-            {0.0, 0.5, 0.5 * 1.6, 0.0, 0.0},    // pitchRate, k_p, k_i, k_f, k_antiWindup
-            {-1.0, 0.0, 0.0, 0.0, 0.0},         // nz, k_p, k_i, k_f
-            {0.0, 0.0, 0.0, 0.0, 0.0},          // heading,
-            {1.0, 0.0, 0.0, 0.0, 0.0},          // ny, k_p, k_i, k_f, k_antiWindup
-            {0.0, 0.5, -0.5 * 1.75, 0.0, 0.0}}; // yawRate, k_p, k_i, k_f, k_antiWindup
+            {0.0, 0.0, 0.0, 0.0, 0.0},   // roll, k_p, k_i, k_f, k_antiWindup
+            {0.0, 1.0, 1.0, 0.0, 0.0},   // rollRate, k_p, k_i, k_f, k_antiWindup
+            {0.0, 0.0, 0.0, 0.0, 0.0},   // pitch, k_p, k_i, k_f, k_antiWindup
+            {0.0, 1.0, -2.0, 0.0, 0.0},  // pitchRate, k_p, k_i, k_f, k_antiWindup
+            {-1.0, 0.0, 0.0, 0.0, 0.0},  // nz, k_p, k_i, k_f
+            {0.0, 0.0, 0.0, 0.0, 0.0},   // heading,
+            {1.0, 0.0, 0.0, 0.0, 0.0},   // ny, k_p, k_i, k_f, k_antiWindup
+            {0.0, 1.0, -2.0, 0.0, 0.0}}; // yawRate, k_p, k_i, k_f, k_antiWindup
         bool integratorOff_b = true;
         double effectorLimitHi[4] = {60.0, 60.0, 60.0, 1.0};
         double effectorLimitLo[4] = {-60.0, -60.0, -60.0, 0.0};
@@ -63,10 +63,10 @@ public:
         double directModeGain[4] = {-0.5, 0.5, 0.5, 1.25}; // scale factor from control input to effector command in direct mode
         double servoRange_d[4] = {180.0, 180.0, 180.0, 1.0};
         double mixingRatioRotational[4][3] = {
-            {1.0, 0.0, 0.2},   // aileron
-            {0.0, -1.0, 0.0},  // elevator
-            {-0.2, 0.0, -1.0}, // rudder (+TER)
-            {0.0, 0.0, 0.0}};  // throttle
+            {1.0, 0.0, 0.2},  // aileron
+            {0.0, 1.0, 0.0},  // elevator
+            {0.2, 0.0, 1.0},  // rudder (+TER)
+            {0.0, 0.0, 0.0}}; // throttle
         double mixingRatioLinear[4][3] = {
             {0.0, 0.0, 0.0},  // aileron (+LTED)
             {0.0, 0.0, 0.0},  // elevator (+TEU)
