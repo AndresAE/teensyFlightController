@@ -116,11 +116,13 @@ void APT::rollInnerLoop()
   }
   else
   {
-    _rollIntegralError = C.trapIntegral(m_APT.pbCmd_dps, _pbCmdPrev_dps, _rollIntegralError, dt_s);
-    _pbCmdPrev_dps = m_APT.pbCmd_dps;
+    _rollError = m_APT.pbCmd_dps - m_IMU_obj.m_IMU.states.angularRateX_dps;
+    _rollIntegralError = C.trapIntegral(_rollError, _rollErrorPrev, _rollIntegralError, dt_s);
+    _rollErrorPrev = _rollError;
 
     _xiRoll = _rollIntegralError * aptParams.gains.rollRate.K_i;
   }
+  m_APT.rollIntegralError = _rollIntegralError;
   m_APT.rollEffectorCmd = proportionalControl(aptParams.gains.rollRate.K_d, _xiRoll, m_IMU_obj.m_IMU.states.angularRateX_dps);
 }
 
@@ -173,11 +175,13 @@ void APT::pitchInnerLoop()
   }
   else
   {
-    _pitchIntegralError = C.trapIntegral(m_APT.qbCmd_dps, _qbCmdPrev_dps, _pitchIntegralError, dt_s);
-    _qbCmdPrev_dps = m_APT.qbCmd_dps;
+    _pitchError = m_APT.qbCmd_dps - m_IMU_obj.m_IMU.states.angularRateY_dps;
+    _pitchIntegralError = C.trapIntegral(_pitchError, _pitchErrorPrev, _pitchIntegralError, dt_s);
+    _pitchErrorPrev = _pitchError;
 
     _xiPitch = _pitchIntegralError * aptParams.gains.pitchRate.K_i;
   }
+  m_APT.pitchIntegralError = _pitchIntegralError;
   m_APT.pitchEffectorCmd = proportionalControl(aptParams.gains.pitchRate.K_d, _xiPitch, m_IMU_obj.m_IMU.states.angularRateY_dps);
 }
 
@@ -226,11 +230,13 @@ void APT::yawInnerLoop()
   }
   else
   {
-    _yawIntegralError = C.trapIntegral(m_APT.rbCmd_dps, _rbCmdPrev_dps, _yawIntegralError, dt_s);
-    _rbCmdPrev_dps = m_APT.rbCmd_dps;
+    _yawError = m_APT.rbCmd_dps - m_IMU_obj.m_IMU.states.angularRateZ_dps;
+    _yawIntegralError = C.trapIntegral(_yawError, _yawErrorPrev, _yawIntegralError, dt_s);
+    _yawErrorPrev = _yawError;
 
     _xiYaw = _yawIntegralError * aptParams.gains.yawRate.K_i;
   }
+  m_APT.yawIntegralError = _yawIntegralError;
   m_APT.yawEffectorCmd = proportionalControl(aptParams.gains.yawRate.K_d, _xiYaw, m_IMU_obj.m_IMU.states.angularRateZ_dps);
 }
 

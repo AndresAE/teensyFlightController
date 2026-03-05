@@ -117,7 +117,7 @@ def plot_latlon(log_file):
 
 if __name__ == '__main__':
     # Use the telemetry log from the tm directory
-    log_file = Path(__file__).parent / 'data/telemetry_log_20260301_164732.txt'
+    log_file = Path(__file__).parent / 'data/telemetry_log_20260303_173831.txt'
 
     if log_file.exists():
         plot_latlon(log_file)

@@ -8,9 +8,9 @@ public:
     struct fcsParams
     {
         bool useTM_b = false;
-        int serialBaud = useTM_b ? 57600 : 9600;
-        int sampleRate_Hz = 50;
-        int sampleRateLo_Hz = 5;
+        int serialBaud = 57600;
+        int sampleRate_Hz = 100;
+        int sampleRateLo_Hz = 100;
         int tmDelay_ms = 5000;
     };
     struct busGains
@@ -46,14 +46,14 @@ public:
     {
         busAptGains gains = {
             {0.0, 0.0, 0.0, 0.0, 0.0},   // roll, k_p, k_i, k_f, k_antiWindup
-            {0.0, 1.0, 1.0, 0.0, 0.0},   // rollRate, k_p, k_i, k_f, k_antiWindup
+            {0.0, 0.5, 0.25, 0.0, 0.0},  // rollRate, k_p, k_i, k_f, k_antiWindup
             {0.0, 0.0, 0.0, 0.0, 0.0},   // pitch, k_p, k_i, k_f, k_antiWindup
-            {0.0, 1.0, -2.0, 0.0, 0.0},  // pitchRate, k_p, k_i, k_f, k_antiWindup
+            {0.0, 0.5, -0.5, 0.0, 0.0},  // pitchRate, k_p, k_i, k_f, k_antiWindup
             {-1.0, 0.0, 0.0, 0.0, 0.0},  // nz, k_p, k_i, k_f
             {0.0, 0.0, 0.0, 0.0, 0.0},   // heading,
             {1.0, 0.0, 0.0, 0.0, 0.0},   // ny, k_p, k_i, k_f, k_antiWindup
-            {0.0, 1.0, -2.0, 0.0, 0.0}}; // yawRate, k_p, k_i, k_f, k_antiWindup
-        bool integratorOff_b = true;
+            {0.0, 0.5, -0.5, 0.0, 0.0}}; // yawRate, k_p, k_i, k_f, k_antiWindup
+        bool integratorOff_b = false;
         double effectorLimitHi[4] = {60.0, 60.0, 60.0, 1.0};
         double effectorLimitLo[4] = {-60.0, -60.0, -60.0, 0.0};
         double effectorOffset[4] = {90.0, 80.0, 90.0, 0.0};

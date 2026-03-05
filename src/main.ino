@@ -86,18 +86,8 @@ void loop()
     gps.step();
     // nav.step();
     endTime_ms = millis();
-    if (endTime_ms >= next5Hz_ms)
-    {
-      if (fcsParams.useTM_b)
-      {
-        printStatusTM(serialPort, now_ms, endTime_ms, tst, msn, imu, gps, nav, gdc, apt);
-      }
-      next5Hz_ms += dt5Hz_ms;
-    }
-    if (!fcsParams.useTM_b)
-    {
-      printStatus(serialPort, now_ms, endTime_ms, tst, msn, imu, gps, nav, gdc, apt);
-    }
+    // printStatus(serialPort, now_ms, endTime_ms, tst, msn, imu, gps, nav, gdc, apt);
+    printStatusBin(serialPort, now_ms, endTime_ms, tst, msn, imu, gps, nav, gdc, apt);
     nextTask_ms += dt_ms;
   };
 };

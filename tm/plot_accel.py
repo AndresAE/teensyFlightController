@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 # Read the latest telemetry log
-log_file = "tm/data/telemetry_log_20260301_164732.txt"
+log_file = "tm/data/telemetry_log_20260303_173501.txt"
 
 timestamps = []
 ax_data = []

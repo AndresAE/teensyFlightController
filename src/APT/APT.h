@@ -58,6 +58,9 @@ public:
     double axialEffectorCmd;
     double lateralEffectorCmd;
     double normalEffectorCmd;
+    double rollIntegralError;
+    double pitchIntegralError;
+    double yawIntegralError;
     double effectorCmd[4];
   };
 
@@ -83,9 +86,12 @@ private:
   double _rollIntegralError = 0.0;
   double _pitchIntegralError = 0.0;
   double _yawIntegralError = 0.0;
-  double _pbCmdPrev_dps = 0.0;
-  double _qbCmdPrev_dps = 0.0;
-  double _rbCmdPrev_dps = 0.0;
+  double _rollError = 0.0;
+  double _pitchError = 0.0;
+  double _yawError = 0.0;
+  double _rollErrorPrev = 0.0;
+  double _pitchErrorPrev = 0.0;
+  double _yawErrorPrev = 0.0;
   double _xiRoll;
   double _xiPitch;
   double _xiYaw;

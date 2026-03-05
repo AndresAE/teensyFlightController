@@ -104,7 +104,7 @@ if __name__ == '__main__':
     # Find the most recent telemetry log
     log_dir = Path(__file__).parent / 'data'
     log_files = sorted(log_dir.glob(
-        'telemetry_log_20260301_164732.txt'), reverse=True)
+        'telemetry_log_20260303_173831.txt'), reverse=True)
 
     if not log_files:
         print(f"No telemetry logs found in {log_dir}")

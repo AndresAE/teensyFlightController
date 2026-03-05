@@ -251,3 +251,63 @@ void printStatus(Stream &serialPort, int now_ms, int endTime_ms, TST &tst, MSN &
         serialPort.println(s);
     }
 }
+
+void printStatusBin(Stream &serialPort, int now_ms, int endTime_ms, TST &tst, MSN &msn, IMU &imu, GPS &gps, NAV &nav, GDC &gdc, APT &apt)
+{
+    busTM tmOut;
+    tmOut.header = 0xABCD;
+    tmOut.crc = 0;
+    tmOut.timeTM.met_s = now_ms / 1000.0;
+    tmOut.timeTM.stp_ms = (endTime_ms - now_ms);
+    tmOut.msnTM.phs = static_cast<int8_t>(msn.missionPhase_e);
+    tmOut.imuTM.ax_fps2 = imu.m_IMU.states.specificForceX_fps2;
+    tmOut.imuTM.ay_fps2 = imu.m_IMU.states.specificForceY_fps2;
+    tmOut.imuTM.az_fps2 = imu.m_IMU.states.specificForceZ_fps2;
+    tmOut.imuTM.gx_dps = imu.m_IMU.states.angularRateX_dps;
+    tmOut.imuTM.gy_dps = imu.m_IMU.states.angularRateY_dps;
+    tmOut.imuTM.gz_dps = imu.m_IMU.states.angularRateZ_dps;
+    tmOut.imuTM.roll_d = imu.m_IMU.euler.roll_d;
+    tmOut.imuTM.pitch_d = imu.m_IMU.euler.pitch_d;
+    tmOut.imuTM.yaw_d = imu.m_IMU.euler.yaw_d;
+    tmOut.gpsTM.timeStamp_s = gps.m_GPS.timeStamp_s;
+    tmOut.gpsTM.latG_d = gps.m_GPS.lla_ddft.latG_d;
+    tmOut.gpsTM.lon_d = gps.m_GPS.lla_ddft.lon_d;
+    tmOut.gpsTM.HAE_ft = gps.m_GPS.lla_ddft.hae_ft;
+    tmOut.gpsTM.vECEF_X_fps = gps.m_vECEF.x_fps;
+    tmOut.gpsTM.vECEF_Y_fps = gps.m_vECEF.y_fps;
+    tmOut.gpsTM.vECEF_Z_fps = gps.m_vECEF.z_fps;
+    tmOut.gpsTM.fixQual = gps.m_GPS.fixQuality;
+    tmOut.gpsTM.nSatellites = gps.m_GPS.nSatellites;
+    tmOut.gpsTM.hdop = gps.m_GPS.hdop;
+    tmOut.gdcTM.pbC_dps = gdc.m_GDC.rollRateCmd_dps;
+    tmOut.gdcTM.nyC_B_fps2 = gdc.m_GDC.nyCmd_B_fps2;
+    tmOut.gdcTM.nzC_B_fps2 = gdc.m_GDC.nzCmd_B_fps2;
+    tmOut.gdcTM.pwrCmd_pct = gdc.m_GDC.throttleCmd_pct;
+    tmOut.aptTM.rollIntegralError = apt.m_APT.rollIntegralError;
+    tmOut.aptTM.pitchIntegralError = apt.m_APT.pitchIntegralError;
+    tmOut.aptTM.yawIntegralError = apt.m_APT.yawIntegralError;
+    for (size_t ii = 0; ii < sizeof(apt.m_APT.effectorCmd) / sizeof(apt.m_APT.effectorCmd[0]); ii++)
+    {
+        tmOut.aptTM.effectorCmd[ii] = apt.m_APT.effectorCmd[ii];
+    }
+    tmOut.crc = calculateCRC(reinterpret_cast<uint8_t *>(&tmOut), sizeof(tmOut) - sizeof(tmOut.crc));
+    serialPort.write(reinterpret_cast<uint8_t *>(&tmOut), sizeof(struct busTM));
+};
+
+uint16_t calculateCRC(const uint8_t *data, size_t len)
+{
+    uint16_t crc = 0xFFFF;
+
+    for (size_t i = 2; i < len; i++)
+    {
+        crc ^= (uint16_t)data[i] << 8;
+        for (uint8_t b = 0; b < 8; b++)
+        {
+            if (crc & 0x8000)
+                crc = (crc << 1) ^ 0x1021;
+            else
+                crc <<= 1;
+        }
+    }
+    return crc;
+}
