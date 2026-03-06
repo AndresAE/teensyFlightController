@@ -1,13 +1,13 @@
-#ifndef CONFIG_H
-#define CONFIG_H
+#ifndef CFG_H
+#define CFG_H
 
-class Config
+class CFG
 {
 public:
-    Config() {}
+    CFG() {}
     struct fcsParams
     {
-        bool useTM_b = false;
+        bool useTM_b = true;
         int serialBaud = 57600;
         int sampleRate_Hz = 100;
         int sampleRateLo_Hz = 100;
@@ -117,7 +117,7 @@ public:
     };
     struct msnParams
     {
-        int takeoffDebounceLimit = 2;
+        int takeoffDebounceLimit = 3;
         float takeoffThreshold_fps2 = 10.0;
     };
 
@@ -159,4 +159,4 @@ public:
     }
 };
 
-#endif // CONFIG_H
+#endif // CFG_H

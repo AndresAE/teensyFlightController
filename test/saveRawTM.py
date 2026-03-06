@@ -7,7 +7,7 @@ HEADER = b'\xAB\xCD'          # new header
 STRUCT_FORMAT = "<d bb 17d bb 11d H"
 STRUCT_SIZE = struct.calcsize(STRUCT_FORMAT)
 
-ser = serial.Serial("COM5", 57600, timeout=5)
+ser = serial.Serial("COM3", 57600, timeout=5)
 
 
 def crc16_ccitt(data: bytes) -> int:

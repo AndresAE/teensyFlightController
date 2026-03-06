@@ -1,5 +1,5 @@
-#ifndef STATUS_H
-#define STATUS_H
+#ifndef TM_H
+#define TM_H
 
 #include <Arduino.h>
 #include "../TST/TST.h"
@@ -81,4 +81,4 @@ struct __attribute__((packed)) busTM
     uint16_t crc;
 };
 
-#endif // STATUS_H
+#endif // TM_H

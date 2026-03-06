@@ -6,7 +6,7 @@
 #include "../Common/Common.h"
 #include "../TST/TST.h"
 #include "../IMU/IMU.h"
-#include "../config/config.h"
+#include "../CFG/CFG.h"
 
 class MSN
 {
@@ -42,8 +42,8 @@ public:
     IMU &m_IMU_obj;
 
 private:
-    Config cfg;
-    const Config::msnParams &msnParams = cfg.getMsnParams();
+    CFG cfg;
+    const CFG::msnParams &msnParams = cfg.getMsnParams();
     int _nxTakeoffDebounceCount = 0;
     bool _busAttached_b = false;
     fcsMissionPhase _missionPhasePredirect_e = MSN_IDLE;

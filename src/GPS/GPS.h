@@ -5,7 +5,7 @@
 #include <Arduino.h>
 #include <cstdint>
 #include "../Common/Common.h"
-#include "../config/config.h"
+#include "../CFG/CFG.h"
 
 constexpr uint8_t UBX_DISABLE_GLL[] = {
     0xB5, 0x62, 0x06, 0x01, 0x08, 0x00, 0xF0, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0A, 0x2B};
@@ -64,7 +64,7 @@ public:
 
 private:
     Common C;
-    Config cfg;
+    CFG cfg;
 
     const int _sendUBXDelay_ms = 50;
     char _c;
@@ -81,7 +81,7 @@ private:
     bool _velocityValid_b = false;
     double _vel_ftps;
 
-    const Config::gpsParams &gpsParams;
+    const CFG::gpsParams &gpsParams;
 
     void processInputs();
     double convertToDecimalDegrees(String raw, String dir);

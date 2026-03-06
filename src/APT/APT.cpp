@@ -26,6 +26,12 @@ void APT::step()
   }
   else
   {
+    if (m_MSN_obj.missionPhase_e >= MSN::fcsMissionPhase::MSN_IDLE)
+    {
+      _resetRollIntegral_b = true;
+      _resetPitchIntegral_b = true;
+      _resetYawIntegral_b = true;
+    }
     evalRoll();
     evalPitch();
     evalYaw();
@@ -77,7 +83,7 @@ void APT::evalDirect()
 
 void APT::rollMiddleLoop()
 {
-  if (m_GDC_obj.m_GDC.rollMode_e != _prevRollState_e)
+  if ((m_GDC_obj.m_GDC.rollMode_e != _prevRollState_e) || _resetRollIntegral_b)
   {
     // reset integrators or states if needed
     _resetRollIntegral_b = true;
@@ -128,7 +134,7 @@ void APT::rollInnerLoop()
 
 void APT::pitchMiddleLoop()
 {
-  if (m_GDC_obj.m_GDC.pitchMode_e != _prevPitchState_e)
+  if ((m_GDC_obj.m_GDC.pitchMode_e != _prevPitchState_e) || _resetPitchIntegral_b)
   {
     // reset integrators or states if needed
     _resetPitchIntegral_b = true;
@@ -187,7 +193,7 @@ void APT::pitchInnerLoop()
 
 void APT::yawMiddleLoop()
 {
-  if (m_GDC_obj.m_GDC.yawMode_e != _prevYawState_e)
+  if ((m_GDC_obj.m_GDC.yawMode_e != _prevYawState_e) || _resetYawIntegral_b)
   {
     // reset integrators or states if needed
     _resetYawIntegral_b = true;

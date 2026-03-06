@@ -9,7 +9,7 @@
 #include "../MSN/MSN.h"
 #include "../GDC/GDC.h"
 #include "../IMU/IMU.h"
-#include "../config/config.h"
+#include "../CFG/CFG.h"
 
 class APT
 {
@@ -73,9 +73,9 @@ public:
 
 private:
   Common C;
-  Config cfg;
+  CFG cfg;
 
-  const Config::aptParams &aptParams;
+  const CFG::aptParams &aptParams;
 
   int _prevRollState_e;
   int _prevPitchState_e;

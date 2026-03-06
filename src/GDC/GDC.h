@@ -6,7 +6,7 @@
 #include "../Common/Common.h"
 #include "../TST/TST.h"
 #include "../MSN/MSN.h"
-#include "../config/config.h"
+#include "../CFG/CFG.h"
 
 class GDC
 {
@@ -78,9 +78,9 @@ public:
 
 private:
   Common C;
-  Config cfg;
+  CFG cfg;
 
-  Config::gdcParams gdcParams = cfg.getGdcParams();
+  CFG::gdcParams gdcParams = cfg.getGdcParams();
 };
 
 #endif // GDC_H

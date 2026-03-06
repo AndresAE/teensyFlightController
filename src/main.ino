@@ -5,11 +5,11 @@
 #include "NAV/NAV.h"
 #include "GDC/GDC.h"
 #include "APT/APT.h"
-#include "Config/config.h"
-#include "Status/Status.h"
+#include "CFG/CFG.h"
+#include "TM/TM.h"
 
-Config cfg;
-Config::fcsParams fcsParams = cfg.getFcsParams();
+CFG cfg;
+CFG::fcsParams fcsParams = cfg.getFcsParams();
 int nextTask_ms = 0;
 int next5Hz_ms = 0;
 int now_ms;

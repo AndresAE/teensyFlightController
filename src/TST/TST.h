@@ -4,7 +4,7 @@
 #include <cmath>
 #include <Arduino.h>
 #include "../Common/Common.h"
-#include "../config/config.h"
+#include "../CFG/CFG.h"
 
 class TST
 {
@@ -46,14 +46,14 @@ public:
 
 private:
   Common C;
-  Config cfg;
+  CFG cfg;
 
   unsigned long _pw;
   unsigned long _now;
   unsigned long _timeout_us;
   unsigned long _lastUpdate;
 
-  Config::tstParams tstParams = cfg.getTstParams();
+  CFG::tstParams tstParams = cfg.getTstParams();
 
   int _nChannels = 0;
 };

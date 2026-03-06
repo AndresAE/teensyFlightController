@@ -38,7 +38,10 @@
 - [x] APT three loop
 - [x] filtered deriv
 - [ ] anti windup
-- [ ] GPS significant figures
+- [x] GPS significant figures
 - [x] move transformation matrices to common
 - [ ] Improve matrix definitions/overwrites
-- [x] consolidate status prints? 
+- [x] consolidate status prints?
+- [x] raw tm bytes 
+- [ ] msnMgr, keep integral off until thrown
+- [ ] rename Config->CFG

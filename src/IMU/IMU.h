@@ -4,7 +4,7 @@
 #include <cmath>
 #include <Arduino.h>
 #include "../Common/Common.h"
-#include "../config/config.h"
+#include "../CFG/CFG.h"
 
 class IMU
 {
@@ -71,9 +71,9 @@ public:
 
 private:
   Common C;
-  Config cfg;
+  CFG cfg;
 
-  const Config::imuParams &imuParams = cfg.getImuParams();
+  const CFG::imuParams &imuParams = cfg.getImuParams();
 
   double _gyroX_offset_dps = 0.0, _gyroY_offset_dps = 0.0, _gyroZ_offset_dps = 0.0;
   double _accelMagnitudeScaling = 1.0;

@@ -1,0 +1,80 @@
+import ast
+import matplotlib.pyplot as plt
+
+# -----------------------------
+# User settings
+# -----------------------------
+filename = "tm/data/telemetry_log_raw_20260306_135635.txt"   # your file
+value_index = 24              # index you want to plot (0 = time)
+# -----------------------------
+
+times = []
+values = []
+
+with open(filename, "r") as f:
+    for line in f:
+        line = line.strip()
+        if not line:
+            continue
+
+        # Safely parse the tuple string into a Python tuple
+        try:
+            tup = ast.literal_eval(line)
+        except Exception as e:
+            print("Parse error:", e, "on line:", line)
+            continue
+
+        # Extract time and desired value
+        t = tup[0]
+        v = tup[value_index]
+
+        times.append(t)
+        values.append(v)
+
+# -----------------------------
+# Plot
+# -----------------------------
+plt.figure(figsize=(10, 5))
+plt.plot(times, values, linewidth=1.5)
+plt.xlabel("Time (s)")
+plt.ylabel(f"Value at index {value_index}")
+plt.title(f"Telemetry Plot: index {value_index} vs time")
+plt.grid(True)
+plt.tight_layout()
+plt.show()
+
+# times = []
+
+# # -----------------------------
+# # Load times from file
+# # -----------------------------
+# with open(filename, "r") as f:
+#     for line in f:
+#         line = line.strip()
+#         if not line:
+#             continue
+
+#         tup = ast.literal_eval(line)
+#         times.append(tup[0])
+
+# # -----------------------------
+# # Compute delta time
+# # -----------------------------
+# dt = []
+# for i in range(1, len(times)):
+#     dt.append(times[i] - times[i-1])
+
+# # Use midpoints for plotting (optional but cleaner)
+# t_mid = times[1:]
+
+# # -----------------------------
+# # Plot
+# # -----------------------------
+# plt.figure(figsize=(10, 5))
+# plt.plot(t_mid, dt, linewidth=1.5)
+# plt.xlabel("Time (s)")
+# plt.ylabel("Δt (s)")
+# plt.title("Delta Time Between Samples")
+# plt.grid(True)
+# plt.tight_layout()
+# plt.show()
