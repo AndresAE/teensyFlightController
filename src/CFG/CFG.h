@@ -1,5 +1,6 @@
 #ifndef CFG_H
 #define CFG_H
+#include "../Common/Common.h"
 
 class CFG
 {
@@ -7,10 +8,10 @@ public:
     CFG() {}
     struct fcsParams
     {
-        bool useTM_b = true;
+        bool useTM_b = false;
         int serialBaud = 57600;
         int sampleRate_Hz = 100;
-        int sampleRateLo_Hz = 100;
+        int sampleRateLo_Hz = 20;
         int tmDelay_ms = 5000;
     };
     struct busGains
@@ -45,33 +46,49 @@ public:
     struct aptParams
     {
         busAptGains gains = {
-            {0.0, 0.0, 0.0, 0.0, 0.0},   // roll, k_p, k_i, k_f, k_antiWindup
-            {0.0, 0.5, 0.25, 0.0, 0.0},  // rollRate, k_p, k_i, k_f, k_antiWindup
-            {0.0, 0.0, 0.0, 0.0, 0.0},   // pitch, k_p, k_i, k_f, k_antiWindup
-            {0.0, 0.5, -0.5, 0.0, 0.0},  // pitchRate, k_p, k_i, k_f, k_antiWindup
-            {-1.0, 0.0, 0.0, 0.0, 0.0},  // nz, k_p, k_i, k_f
-            {0.0, 0.0, 0.0, 0.0, 0.0},   // heading,
-            {1.0, 0.0, 0.0, 0.0, 0.0},   // ny, k_p, k_i, k_f, k_antiWindup
-            {0.0, 0.5, -0.5, 0.0, 0.0}}; // yawRate, k_p, k_i, k_f, k_antiWindup
+            {0.0, 0.0, 0.0, 0.0, 0.0},  // roll, k_p, k_i, k_f, k_antiWindup
+            {0.0, 10, 1, 0.0, 0.0},     // rollRate, k_p, k_i, k_f, k_antiWindup
+            {0.0, 0.0, 0.0, 0.0, 0.0},  // pitch, k_p, k_i, k_f, k_antiWindup
+            {0.0, 1.0, 1.0, 0.0, 0.0},  // pitchRate, k_p, k_i, k_f, k_antiWindup
+            {-1.5, 0.0, 0.0, 0.0, 0.0}, // nz, k_p, k_i, k_f
+            {0.0, 0.0, 0.0, 0.0, 0.0},  // heading,
+            {5.0, 0.0, 0.0, 0.0, 0.0},  // ny, k_p, k_i, k_f, k_antiWindup
+            {0.0, 1.0, 1.0, 0.0, 0.0}}; // yawRate, k_p, k_i, k_f, k_antiWindup
         bool integratorOff_b = false;
-        double effectorLimitHi[4] = {60.0, 60.0, 60.0, 1.0};
-        double effectorLimitLo[4] = {-60.0, -60.0, -60.0, 0.0};
-        double effectorOffset[4] = {90.0, 80.0, 90.0, 0.0};
-        int effectorPins[4] = {7, 8, 9, 10};
-        int muMax_us[4] = {2500, 2500, 2500, 2000};        // microseconds
-        int muMin_us[4] = {500, 500, 500, 1000};           // microseconds
-        double directModeGain[4] = {-0.5, 0.5, 0.5, 1.25}; // scale factor from control input to effector command in direct mode
-        double servoRange_d[4] = {180.0, 180.0, 180.0, 1.0};
-        double mixingRatioRotational[4][3] = {
-            {1.0, 0.0, 0.2},  // aileron (+LTED)
-            {0.0, 1.0, 0.0},  // elevator (+TED)
-            {0.2, 0.0, 1.0},  // rudder (+TEL)
-            {0.0, 0.0, 0.0}}; // throttle
-        double mixingRatioLinear[4][3] = {
+        static const int nEffector = 4;
+        double effectorLimitHi[nEffector] = {30.0, 30.0, 30.0, 1.0};
+        double effectorLimitLo[nEffector] = {-30.0, -30.0, -30.0, 0.0};
+        double effectorOffset[nEffector] = {90.0, 90.0, 90.0, 0.0};
+        int effectorPins[nEffector] = {7, 8, 9, 10};
+        int muMax_us[nEffector] = {2500, 2500, 2500, 2000};        // microseconds
+        int muMin_us[nEffector] = {500, 500, 500, 1000};           // microseconds
+        double directModeGain[nEffector] = {-0.5, 0.5, 0.5, 1.25}; // scale factor from control input to effector command in direct mode
+        double servoRange_d[nEffector] = {180.0, 180.0, 180.0, 1.0};
+        double mixingRatioRotational[nEffector][3] = {
+            {1.0, 0.0, -0.2},  // aileron (+LTED)
+            {0.0, -1.0, 0.0},  // elevator (+TED)
+            {-0.2, 0.0, -1.0}, // rudder (+TEL)
+            {0.0, 0.0, 0.0}};  // throttle
+        double mixingRatioLinear[nEffector][3] = {
             {0.0, 0.0, 0.0},  // aileron (+LTED)
             {0.0, 0.0, 0.0},  // elevator (+TED)
             {0.0, 0.0, 0.0},  // rudder (+TEL)
             {1.0, 0.0, 0.0}}; // throttle
+        static const int nMappingBP = 4;
+        Common::matrix servoMappingBreakpoints = {
+            nEffector,
+            nMappingBP,
+            {{-30.0, -15.0, 0.0, 15.0, 30.0},
+             {-30.0, -15.0, 0.0, 15.0, 30.0},
+             {-30.0, -15.0, 0.0, 15.0, 30.0},
+             {0.0, 0.25, 0.5, 0.75, 1.0}}};
+        Common::matrix servoMappingTable = {
+            nEffector,
+            nMappingBP,
+            {{-30.0, -15.0, 0.0, 15.0, 30.0},
+             {-30.0, -15.0, 0.0, 15.0, 30.0},
+             {-30.0, -15.0, 0.0, 15.0, 30.0},
+             {0.0, 0.25, 0.5, 0.75, 1.0}}};
     };
     struct imuParams
     {

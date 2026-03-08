@@ -24,7 +24,7 @@
 - [x] check TM with new architecture
 - [x] hardware abstraction layer to make IMU, GPS, ans servo independent
 - [ ] zero protected divides, common?
-- [ ] initialize APT params based on effector size
+- [x] initialize APT params based on effector size
 - [ ] initialize GDC cpp params based on input size
 - [x] kalman filter for bad intermittent GPS
 - [ ] time of validity for IMU, GPS, GDC commands
@@ -37,11 +37,12 @@
 - [ ] fix NAV alignment, add attitude
 - [x] APT three loop
 - [x] filtered deriv
-- [ ] anti windup
+- [x] anti windup
 - [x] GPS significant figures
 - [x] move transformation matrices to common
 - [ ] Improve matrix definitions/overwrites
 - [x] consolidate status prints?
 - [x] raw tm bytes 
-- [ ] msnMgr, keep integral off until thrown
-- [ ] rename Config->CFG
+- [x] msnMgr, keep integral off until thrown
+- [x] rename Config->CFG
+- [x] interpolation mapping

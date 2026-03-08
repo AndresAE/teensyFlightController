@@ -10,6 +10,20 @@ double Common::norm(double x, double y, double z)
   return sqrt(x * x + y * y + z * z);
 }
 
+double Common::abs(double x)
+{
+  return sqrt(x * x);
+}
+
+int Common::sign(double x)
+{
+  if (x > 0)
+    return 1;
+  if (x < 0)
+    return -1;
+  return 0;
+}
+
 double Common::trapIntegral(double x, double x_prev, double y, double dt_s)
 {
   return (x + x_prev) * dt_s / 2 + y;
@@ -282,23 +296,23 @@ Common::matrix Common::getEcef2body(Common::matrix ecef2body, double latG_d, dou
 
 double Common::interpolate(Common::matrix xArray, Common::matrix yArray, double x)
 {
-  if (xArray.rows < 2)
+  if (xArray.cols < 2)
     return 0.0; // Not enough data points
 
   int ii = 0;
-  while (ii < xArray.rows - 1 && xArray.m[ii][0] < x)
+  while (ii < xArray.cols - 1 && xArray.m[0][ii] < x)
     ii++;
 
   // clamp ii to valid range
   if (ii == 0)
     return yArray.m[0][0]; // Return first value if x is less than first x value
-  if (ii == xArray.rows - 1)
-    return yArray.m[xArray.rows - 1][0]; // Return last value if x is greater than last x value
+  if (ii == xArray.cols - 1)
+    return yArray.m[0][xArray.cols - 1]; // Return last value if x is greater than last x value
 
-  double x0 = xArray.m[ii - 1][0];
-  double y0 = yArray.m[ii - 1][0];
-  double x1 = xArray.m[ii][0];
-  double y1 = yArray.m[ii][0];
+  double x0 = xArray.m[0][ii - 1];
+  double y0 = yArray.m[0][ii - 1];
+  double x1 = xArray.m[0][ii];
+  double y1 = yArray.m[0][ii];
 
   if (x1 - x0 == 0.0)
     return y0; // avoid division by zero

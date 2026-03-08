@@ -50,6 +50,8 @@ public:
 
     // common methods
     double norm(double x, double y, double z);
+    double abs(double x);
+    int sign(double x);
     double calcAlpha(double cutoff_Hz, double dt_s);
     double trapIntegral(double x, double x_prev, double y, double dt_s);
     double lowPassFilter(double x, double x_prev, double alpha);

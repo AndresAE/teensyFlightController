@@ -43,6 +43,7 @@ public:
   void applyLimits();
   void setEffectors();
   double proportionalControl(double k_p, double cvc, double cv);
+  void mapServos();
 
   struct busAPT
   {
@@ -61,7 +62,8 @@ public:
     double rollIntegralError;
     double pitchIntegralError;
     double yawIntegralError;
-    double effectorCmd[4];
+    bool effectorOnLimit_b[CFG::aptParams::nEffector] = {false};
+    double effectorCmd[CFG::aptParams::nEffector];
   };
 
   busAPT m_APT;
@@ -95,6 +97,12 @@ private:
   double _xiRoll;
   double _xiPitch;
   double _xiYaw;
+  double _rollEffectorCmdPrev = 0;
+  double _pitchEffectorCmdPrev = 0;
+  double _yawEffectorCmdPrev = 0;
+  double _rollEffectorCmdAlt = 0;
+  double _pitchEffectorCmdAlt = 0;
+  double _yawEffectorCmdAlt = 0;
   int _nEffectors;
   int _nRotationalAxes = 3;
   int _nLinearAxes = 3;
@@ -103,8 +111,10 @@ private:
   int _pulse_us;
   int _init_us;
   double _meanPWM;
-  bool _effectorOnLimit_b[4] = {false, false, false, false};
-  Servo _servos[4];
+  Servo _servos[CFG::aptParams::nEffector];
+
+  Common::matrix _breakpoints = {CFG::aptParams::nEffector, CFG::aptParams::nMappingBP, {{0}}};
+  Common::matrix _array = {CFG::aptParams::nEffector, CFG::aptParams::nMappingBP, {{0}}};
 };
 
 #endif // APT_H

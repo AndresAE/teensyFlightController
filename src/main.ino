@@ -11,11 +11,12 @@
 CFG cfg;
 CFG::fcsParams fcsParams = cfg.getFcsParams();
 int nextTask_ms = 0;
-int next5Hz_ms = 0;
+int nextSlowTask_ms = 0;
 int now_ms;
 int dt_ms = 0;
-int dt5Hz_ms = 0;
+int dtSlow_ms = 0;
 int endTime_ms = 0;
+int sampleRateGPS_Hz = 5;
 
 Stream &chooseSerial()
 {
@@ -31,7 +32,7 @@ Stream &chooseSerial()
 
 Stream &serialPort = chooseSerial();
 IMU imu(fcsParams.sampleRate_Hz);
-GPS gps(fcsParams.sampleRateLo_Hz);
+GPS gps(sampleRateGPS_Hz);
 NAV nav(fcsParams.sampleRate_Hz, imu, gps);
 TST tst(fcsParams.sampleRate_Hz);
 MSN msn(fcsParams.sampleRate_Hz, tst, imu);
@@ -67,9 +68,9 @@ void setup()
   apt.begin();
 
   dt_ms = static_cast<int>(1000 / fcsParams.sampleRate_Hz);
-  dt5Hz_ms = static_cast<int>(1000 / fcsParams.sampleRateLo_Hz);
+  dtSlow_ms = static_cast<int>(1000 / fcsParams.sampleRateLo_Hz);
   nextTask_ms = millis() + dt_ms;
-  next5Hz_ms = millis() + dt5Hz_ms;
+  nextSlowTask_ms = millis() + dtSlow_ms;
   serialPort.println("----- Starting Flight Loop -----");
 }
 
@@ -86,8 +87,12 @@ void loop()
     gps.step();
     // nav.step();
     endTime_ms = millis();
-    // printStatus(serialPort, now_ms, endTime_ms, tst, msn, imu, gps, nav, gdc, apt);
-    printStatusBin(serialPort, now_ms, endTime_ms, tst, msn, imu, gps, nav, gdc, apt);
+    if (now_ms >= nextSlowTask_ms)
+    {
+      printStatus(serialPort, now_ms, endTime_ms, tst, msn, imu, gps, nav, gdc, apt);
+      // printStatusBin(serialPort, now_ms, endTime_ms, tst, msn, imu, gps, nav, gdc, apt);
+      nextSlowTask_ms += dtSlow_ms;
+    }
     nextTask_ms += dt_ms;
   };
 };

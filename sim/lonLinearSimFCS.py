@@ -16,17 +16,26 @@ class controller():
         self.pCmd_errorInt = 0
         self.qCmd_errorInt = 0
         self.rCmd_errorInt = 0
+        self.rollCommandPrev = 0
+        self.pitchCommandPrev = 0
+        self.yawCommandPrev = 0
+        self.saturated = False
 
     def step(self, x, u_cmd, dt_s):
         ka_phi = 5
-        ka_nz = -1
-        ka_ny = 5
+        ka_nz = -50
+        ka_ny = 50
         kd_p = 1  # 2.43
-        ki_p = 5
-        kd_q = -1  # 1.58
-        ki_q = 2
+        ki_p = 1/100
+        kd_q = 1/100  # 1.58
+        ki_q = 5
         kd_r = -1  # 1.75
         ki_r = 2
+        pitchLimit = 30
+
+        ka_nz = -1.5
+        kd_q = 1  # 1.58
+        ki_q = 1
 
         mixing = np.array([[1, 0, 0],
                            [0, 1, 0],
@@ -53,23 +62,45 @@ class controller():
         qCmd_error_dps = qCmd_B_dps - q_B_dps
         rCmd_error_dps = rCmd_B_dps - r_B_dps
 
-        self.pCmd_errorInt += pCmd_error_dps * dt_s
-        self.qCmd_errorInt += qCmd_error_dps * dt_s
-        self.rCmd_errorInt += rCmd_error_dps * dt_s
+        if (self.saturated) and (np.sign(self.pitchCommandPrev) == np.sign(qCmd_error_dps)):
+            self.pCmd_errorInt = 0
+            self.qCmd_errorInt = (
+                self.pitchCommandPrev / kd_q + q_B_dps) / ki_q
+            self.rCmd_errorInt = 0
+            self.pCmd_errorInt += pCmd_error_dps * dt_s
+            self.qCmd_errorInt += qCmd_error_dps * dt_s
+            self.rCmd_errorInt += rCmd_error_dps * dt_s
+        else:
+            self.pCmd_errorInt += pCmd_error_dps * dt_s
+            self.qCmd_errorInt += qCmd_error_dps * dt_s
+            self.rCmd_errorInt += rCmd_error_dps * dt_s
 
         # inner loop
         rollCommand = kd_p * (ki_p * self.pCmd_errorInt - p_B_dps)
         pitchCommand = kd_q * (ki_q * self.qCmd_errorInt - q_B_dps)
         yawCommand = kd_r * (ki_r * self.rCmd_errorInt - r_B_dps)
 
+        if pitchCommand > pitchLimit:
+            pitchCommand = pitchLimit
+            self.saturated = True
+        elif pitchCommand < -pitchLimit:
+            pitchCommand = -pitchLimit
+            self.saturated = True
+        else:
+            self.saturated = False
+
+        self.rollCommandPrev = rollCommand
+        self.pitchCommandPrev = pitchCommand
+        self.yawCommandPrev = yawCommand
+
         # control allocation
-        u = cmn.d2r * \
+        u = -cmn.d2r * \
             mixing @ np.array([[rollCommand], [pitchCommand], [yawCommand]])
-        return u
+        return u, qCmd_B_dps
 
 
 # long
-v_fps = 50
+v_fps = 30
 rho_slugft3 = 0.00238
 qBar_psf = 0.5*rho_slugft3*v_fps**2
 
@@ -157,39 +188,50 @@ D = np.array([[0],
 t_s = np.arange(0, 10 + 0.01, 0.01)
 fcs = controller()
 alpha_d = []
-q_rps = []
+q_dps = []
 nz_fps2 = []
 elevator_d = []
+intPitch = []
+qCmdOut = []
+uFCSOut = []
+satOut = []
 gdcCmd = np.array([0, 0, 0])
 fcsIn = np.array([0, 0, 0, 0, 0, 0])
 x = np.array([[0.0], [0.0]])
 dt_s = 0.01
 for i in range(len(t_s)):
-    if t_s[i] > 1:
-        gdcCmd = np.array([0, 0, -32.2])
+    if (t_s[i] > 1) and (t_s[i] < 5):
+        gdcCmd = np.array([0, 0, -10])
+        # dele = -5*cmn.d2r
+    elif t_s[i] >= 5:
+        gdcCmd = np.array([0, 0, 0])
+        # dele = 0
+    else:
+        gdcCmd = np.array([0, 0, 0])
+        # dele = 0
 
-    uOut = fcs.step(fcsIn, gdcCmd, 0.01)
+    uOut, qCmd_B_dps = fcs.step(fcsIn, gdcCmd, 0.01)
     u = np.array([[uOut[1][0]]])
+    # u = np.array([[dele]])
     xDot = A @ x + B @ u
     x += xDot * dt_s
     y = C @ x + D @ u
 
-    fcsIn = np.array([0, y[1][0], 0, 0, 0, y[2][0]])
+    fcsIn = np.array([0, y[1][0]*cmn.r2d, 0, 0, 0, y[2][0]])
 
     alpha_d.append(y[0][0]*cmn.r2d)
-    q_rps.append(y[1][0])
+    q_dps.append(y[1][0]*cmn.r2d)
     nz_fps2.append(y[2][0])
-    elevator_d.append(u[0][0]*cmn.r2d)
+    elevator_d.append(uOut[1][0]*cmn.r2d)
+    intPitch.append(fcs.qCmd_errorInt)
+    satOut.append(fcs.saturated)
+    uFCSOut.append(uOut[1][0]*cmn.r2d)
+    qCmdOut.append(qCmd_B_dps)
 
 plt.figure()
 plt.plot(t_s, alpha_d)
 plt.xlabel('Time (s)')
 plt.ylabel('Alpha (deg)')
-plt.show()
-plt.figure()
-plt.plot(t_s, q_rps)
-plt.xlabel('Time (s)')
-plt.ylabel('q (deg/s)')
 plt.show()
 plt.figure()
 plt.plot(t_s, nz_fps2)
@@ -200,4 +242,25 @@ plt.figure()
 plt.plot(t_s, elevator_d)
 plt.xlabel('Time (s)')
 plt.ylabel('Elevator (deg)')
+plt.show()
+plt.figure()
+plt.plot(t_s, intPitch)
+plt.xlabel('Time (s)')
+plt.ylabel('int pitch')
+plt.show()
+# plt.figure()
+# plt.plot(t_s, uFCSOut)
+# plt.xlabel('Time (s)')
+# plt.ylabel('pitch FCS [d]')
+plt.show()
+plt.figure()
+plt.plot(t_s, qCmdOut)
+plt.plot(t_s, q_dps)
+plt.xlabel('Time (s)')
+plt.ylabel('pitch rate')
+plt.show()
+plt.figure()
+plt.plot(t_s, satOut)
+plt.xlabel('Time (s)')
+plt.ylabel('sat')
 plt.show()
