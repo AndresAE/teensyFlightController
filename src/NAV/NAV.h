@@ -1,7 +1,7 @@
 #ifndef NAV_H
 #define NAV_H
 
-#include "../Common/Common.h"
+#include "../CMN/CMN.h"
 #include "../IMU/IMU.h"
 #include "../GPS/GPS.h"
 
@@ -51,27 +51,27 @@ public:
     GPS &m_GPS_obj;
 
 private:
-    Common C;
+    CMN C;
 
-    Common::matrix _ned2ecefMatrix;
-    Common::matrix _ned2bodyMatrix;
-    Common::matrix _body2ecefMatrix;
+    CMN::matrix _ned2ecefMatrix;
+    CMN::matrix _ned2bodyMatrix;
+    CMN::matrix _body2ecefMatrix;
 
-    Common::matrix _gravityNED_fps2;
+    CMN::matrix _gravityNED_fps2;
 
-    Common::matrix _vb_fps;
-    Common::matrix _sf_fps2;
-    Common::matrix _Pmat;
-    Common::matrix _Q;
-    Common::matrix _R;
-    Common::matrix _Bmat;
-    Common::matrix _F;
-    Common::matrix _H;
-    Common::matrix _I;
-    Common::matrix _K;
-    Common::matrix _Xmat;
-    Common::matrix _Umat;
-    Common::matrix _Z;
+    CMN::matrix _vb_fps;
+    CMN::matrix _sf_fps2;
+    CMN::matrix _Pmat;
+    CMN::matrix _Q;
+    CMN::matrix _R;
+    CMN::matrix _Bmat;
+    CMN::matrix _F;
+    CMN::matrix _H;
+    CMN::matrix _I;
+    CMN::matrix _K;
+    CMN::matrix _Xmat;
+    CMN::matrix _Umat;
+    CMN::matrix _Z;
 
     long _lastGpsTime_s = 0;
 };

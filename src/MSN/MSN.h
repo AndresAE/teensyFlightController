@@ -3,7 +3,7 @@
 
 #include <cmath>
 #include <Arduino.h>
-#include "../Common/Common.h"
+#include "../CMN/CMN.h"
 #include "../TST/TST.h"
 #include "../IMU/IMU.h"
 #include "../CFG/CFG.h"

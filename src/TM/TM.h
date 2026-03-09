@@ -11,7 +11,7 @@
 #include "../APT/APT.h"
 
 void printStatus(Stream &serialPort, int now_ms, int endTime_ms, TST &tst, MSN &msn, IMU &imu, GPS &gps, NAV &nav, GDC &gdc, APT &apt);
-void printStatusBin(Stream &serialPort, int now_ms, int endTime_ms, TST &tst, MSN &msn, IMU &imu, GPS &gps, NAV &nav, GDC &gdc, APT &apt);
+void printStatusRaw(Stream &serialPort, int now_ms, int endTime_ms, TST &tst, MSN &msn, IMU &imu, GPS &gps, NAV &nav, GDC &gdc, APT &apt);
 uint16_t calculateCRC(const uint8_t *data, size_t length);
 
 struct __attribute__((packed)) busTimeTM

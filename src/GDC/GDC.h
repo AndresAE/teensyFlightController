@@ -3,7 +3,7 @@
 
 #include <cmath>
 #include <Arduino.h>
-#include "../Common/Common.h"
+#include "../CMN/CMN.h"
 #include "../TST/TST.h"
 #include "../MSN/MSN.h"
 #include "../CFG/CFG.h"
@@ -77,7 +77,7 @@ public:
   MSN &m_MSN_obj;
 
 private:
-  Common C;
+  CMN C;
   CFG cfg;
 
   CFG::gdcParams gdcParams = cfg.getGdcParams();

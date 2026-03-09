@@ -1,21 +1,21 @@
-#include "Common.h"
+#include "CMN.h"
 
-Common::Common()
+CMN::CMN()
 {
   // Constructor logic if needed
 }
 
-double Common::norm(double x, double y, double z)
+double CMN::norm(double x, double y, double z)
 {
   return sqrt(x * x + y * y + z * z);
 }
 
-double Common::abs(double x)
+double CMN::abs(double x)
 {
   return sqrt(x * x);
 }
 
-int Common::sign(double x)
+int CMN::sign(double x)
 {
   if (x > 0)
     return 1;
@@ -24,33 +24,72 @@ int Common::sign(double x)
   return 0;
 }
 
-double Common::trapIntegral(double x, double x_prev, double y, double dt_s)
+double CMN::tustinIntegral(double x, double x_prev, double y, double dt_s)
 {
   return (x + x_prev) * dt_s / 2 + y;
 }
 
-double Common::lowPassFilter(double x, double x_prev, double alpha)
+double CMN::lowPassFilter(double x, double x_prev, double alpha)
 {
   return alpha * x + (1.0 - alpha) * x_prev;
 }
 
-double Common::filteredDerivative(double x, double x_prev, double derivPrev, double alpha, double dt_s)
+double CMN::filteredDerivative(double x, double x_prev, double derivPrev, double alpha, double dt_s)
 {
   return lowPassFilter((x - x_prev) / dt_s, derivPrev, alpha);
 }
 
-double Common::calcAlpha(double cutoff_Hz, double dt_s)
+double CMN::calcAlpha(double cutoff_Hz, double dt_s)
 {
   return dt_s / (1.0 / (2.0 * _PI * cutoff_Hz) + dt_s);
 }
 
-double Common::primeVerticalRadiusOfCurvature(double latG_d)
+double CMN::protectedDivide(double numerator, double denominator, double threshold)
+{
+  if (fabs(denominator) < threshold)
+  {
+    return numerator >= 0.0 ? (numerator / threshold) : (numerator / -threshold);
+  }
+  return numerator / denominator;
+}
+
+double CMN::interpolate(CMN::matrix xArray, CMN::matrix yArray, double x, int rowIndex = 0)
+{
+  if (xArray.cols < 2)
+    return 0.0; // Not enough data points
+
+  int ii = 0;
+  while (ii < xArray.cols - 1 && xArray.m[rowIndex][ii] < x)
+    ii++;
+
+  // clamp ii to valid range
+  if (ii == 0)
+    return yArray.m[rowIndex][0]; // Return first value if x is less than or equal to first x value
+
+  double x0 = xArray.m[rowIndex][ii - 1];
+  double y0 = yArray.m[rowIndex][ii - 1];
+  double x1 = xArray.m[rowIndex][ii];
+  double y1 = yArray.m[rowIndex][ii];
+
+  if (x <= x1)
+  {
+    if (x1 - x0 == 0.0)
+      return y0; // avoid division by zero
+    return y0 + (y1 - y0) * (x - x0) / (x1 - x0);
+  }
+  else
+  {
+    return y1; // x > x1, return last value
+  }
+}
+
+double CMN::primeVerticalRadiusOfCurvature(double latG_d)
 {
   double sinLat = sin(DEG2RAD * latG_d);
   return WGS84_r_ft / sqrt(1.0 - WGS84_e2 * (sinLat * sinLat));
 }
 
-Common::busEcef Common::lla2ecef(busLLA lla_ddft)
+CMN::busEcef CMN::lla2ecef(busLLA lla_ddft)
 {
   n_ft = primeVerticalRadiusOfCurvature(lla_ddft.latG_d);
   double cosLat = cos(DEG2RAD * lla_ddft.latG_d);
@@ -62,7 +101,7 @@ Common::busEcef Common::lla2ecef(busLLA lla_ddft)
   return m_ECEF;
 }
 
-Common::busLLA Common::ecef2lla(busEcef ecef_ft)
+CMN::busLLA CMN::ecef2lla(busEcef ecef_ft)
 {
   m_LLA.lon_d = RAD2DEG * atan2(ecef_ft.y_ft, ecef_ft.x_ft);
   _nIter = 0;
@@ -79,9 +118,9 @@ Common::busLLA Common::ecef2lla(busEcef ecef_ft)
   return m_LLA;
 }
 
-Common::matrix Common::matrixMultiply(Common::matrix A, Common::matrix B)
+CMN::matrix CMN::matrixMultiply(CMN::matrix A, CMN::matrix B)
 {
-  Common::matrix mat;
+  CMN::matrix mat;
   mat.rows = A.rows;
   mat.cols = B.cols;
   for (int i = 0; i < A.rows; i++)
@@ -98,9 +137,9 @@ Common::matrix Common::matrixMultiply(Common::matrix A, Common::matrix B)
   return mat;
 }
 
-Common::matrix Common::matrixAdd(Common::matrix A, Common::matrix B, bool negate_b)
+CMN::matrix CMN::matrixAdd(CMN::matrix A, CMN::matrix B, bool negate_b)
 {
-  Common::matrix R;
+  CMN::matrix R;
   R.rows = A.rows;
   R.cols = A.cols;
   for (int i = 0; i < A.rows; i++)
@@ -120,9 +159,9 @@ Common::matrix Common::matrixAdd(Common::matrix A, Common::matrix B, bool negate
   return R;
 }
 
-Common::matrix Common::matrixTranspose(Common::matrix A)
+CMN::matrix CMN::matrixTranspose(CMN::matrix A)
 {
-  Common::matrix T;
+  CMN::matrix T;
   T.rows = A.cols;
   T.cols = A.rows;
   for (int i = 0; i < A.rows; i++)
@@ -135,10 +174,10 @@ Common::matrix Common::matrixTranspose(Common::matrix A)
   return T;
 }
 
-Common::matrix Common::matrixInverse(Common::matrix A)
+CMN::matrix CMN::matrixInverse(CMN::matrix A)
 {
   int n = A.rows;
-  Common::matrix aug;
+  CMN::matrix aug;
   aug.rows = n;
   aug.cols = 2 * n;
 
@@ -183,7 +222,7 @@ Common::matrix Common::matrixInverse(Common::matrix A)
     if (fabs(diag) < 1e-9f)
     {
       // singular; return zero-sized matrix
-      Common::matrix zero;
+      CMN::matrix zero;
       zero.rows = 0;
       zero.cols = 0;
       return zero;
@@ -206,7 +245,7 @@ Common::matrix Common::matrixInverse(Common::matrix A)
     }
   }
 
-  Common::matrix inv;
+  CMN::matrix inv;
   inv.rows = n;
   inv.cols = n;
   for (int i = 0; i < n; i++)
@@ -219,9 +258,9 @@ Common::matrix Common::matrixInverse(Common::matrix A)
   return inv;
 }
 
-Common::matrix Common::crossProductMatrix(Common::matrix A, Common::matrix B)
+CMN::matrix CMN::crossProductMatrix(CMN::matrix A, CMN::matrix B)
 {
-  Common::matrix C;
+  CMN::matrix C;
   C.rows = 3;
   C.cols = 1;
   C.m[0][0] = A.m[1][0] * B.m[2][0] - A.m[2][0] * B.m[1][0];
@@ -230,7 +269,7 @@ Common::matrix Common::crossProductMatrix(Common::matrix A, Common::matrix B)
   return C;
 }
 
-Common::matrix Common::getNed2body(Common::matrix ned2body, double roll_d, double pitch_d, double yaw_d)
+CMN::matrix CMN::getNed2body(CMN::matrix ned2body, double roll_d, double pitch_d, double yaw_d)
 {
   double pitch_r = pitch_d * DEG2RAD;
   double yaw_r = yaw_d * DEG2RAD;
@@ -248,14 +287,14 @@ Common::matrix Common::getNed2body(Common::matrix ned2body, double roll_d, doubl
   return ned2body;
 }
 
-Common::matrix Common::getBody2ned(Common::matrix body2ned, double roll_d, double pitch_d, double yaw_d)
+CMN::matrix CMN::getBody2ned(CMN::matrix body2ned, double roll_d, double pitch_d, double yaw_d)
 {
-  Common::matrix ned2body = getNed2body(Common::matrix(), roll_d, pitch_d, yaw_d);
+  CMN::matrix ned2body = getNed2body(CMN::matrix(), roll_d, pitch_d, yaw_d);
   body2ned = matrixTranspose(ned2body);
   return body2ned;
 }
 
-Common::matrix Common::getNed2ecef(Common::matrix ned2ecef, double latG_d, double lon_d)
+CMN::matrix CMN::getNed2ecef(CMN::matrix ned2ecef, double latG_d, double lon_d)
 {
   double lat = latG_d * DEG2RAD;
   double lon = lon_d * DEG2RAD;
@@ -272,63 +311,24 @@ Common::matrix Common::getNed2ecef(Common::matrix ned2ecef, double latG_d, doubl
   return ned2ecef;
 }
 
-Common::matrix Common::getEcef2ned(Common::matrix ecef2ned, double latG_d, double lon_d)
+CMN::matrix CMN::getEcef2ned(CMN::matrix ecef2ned, double latG_d, double lon_d)
 {
-  Common::matrix ned2ecef = getNed2ecef(Common::matrix(), latG_d, lon_d);
+  CMN::matrix ned2ecef = getNed2ecef(CMN::matrix(), latG_d, lon_d);
   ecef2ned = matrixTranspose(ned2ecef);
   return ecef2ned;
 }
 
-Common::matrix Common::getBody2ecef(Common::matrix body2ecef, double latG_d, double lon_d, double roll_d, double pitch_d, double yaw_d)
+CMN::matrix CMN::getBody2ecef(CMN::matrix body2ecef, double latG_d, double lon_d, double roll_d, double pitch_d, double yaw_d)
 {
-  Common::matrix ned2ecef = getNed2ecef(Common::matrix(), latG_d, lon_d);
-  Common::matrix ned2body = getNed2body(Common::matrix(), roll_d, pitch_d, yaw_d);
+  CMN::matrix ned2ecef = getNed2ecef(CMN::matrix(), latG_d, lon_d);
+  CMN::matrix ned2body = getNed2body(CMN::matrix(), roll_d, pitch_d, yaw_d);
   body2ecef = matrixMultiply(ned2ecef, matrixTranspose(ned2body));
   return body2ecef;
 }
 
-Common::matrix Common::getEcef2body(Common::matrix ecef2body, double latG_d, double lon_d, double roll_d, double pitch_d, double yaw_d)
+CMN::matrix CMN::getEcef2body(CMN::matrix ecef2body, double latG_d, double lon_d, double roll_d, double pitch_d, double yaw_d)
 {
-  Common::matrix body2ecef = getBody2ecef(Common::matrix(), latG_d, lon_d, roll_d, pitch_d, yaw_d);
+  CMN::matrix body2ecef = getBody2ecef(CMN::matrix(), latG_d, lon_d, roll_d, pitch_d, yaw_d);
   ecef2body = matrixTranspose(body2ecef);
   return ecef2body;
-}
-
-double Common::interpolate(Common::matrix xArray, Common::matrix yArray, double x, int rowIndex = 0)
-{
-  if (xArray.cols < 2)
-    return 0.0; // Not enough data points
-
-  int ii = 0;
-  while (ii < xArray.cols - 1 && xArray.m[rowIndex][ii] < x)
-    ii++;
-
-  // clamp ii to valid range
-  if (ii == 0)
-    return yArray.m[rowIndex][0]; // Return first value if x is less than or equal to first x value
-
-  double x0 = xArray.m[rowIndex][ii - 1];
-  double y0 = yArray.m[rowIndex][ii - 1];
-  double x1 = xArray.m[rowIndex][ii];
-  double y1 = yArray.m[rowIndex][ii];
-
-  if (x <= x1)
-  {
-    if (x1 - x0 == 0.0)
-      return y0; // avoid division by zero
-    return y0 + (y1 - y0) * (x - x0) / (x1 - x0);
-  }
-  else
-  {
-    return y1; // x > x1, return last value
-  }
-}
-
-double Common::protectedDivide(double numerator, double denominator, double threshold)
-{
-  if (fabs(denominator) < threshold)
-  {
-    return numerator >= 0.0 ? (numerator / threshold) : (numerator / -threshold);
-  }
-  return numerator / denominator;
 }

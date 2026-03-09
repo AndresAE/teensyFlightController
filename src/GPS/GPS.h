@@ -4,7 +4,7 @@
 #include <cmath>
 #include <Arduino.h>
 #include <cstdint>
-#include "../Common/Common.h"
+#include "../CMN/CMN.h"
 #include "../CFG/CFG.h"
 
 constexpr uint8_t UBX_DISABLE_GLL[] = {
@@ -47,9 +47,9 @@ public:
     // bus definitions
     struct busGPS
     {
-        Common::busLLA lla_ddft;
-        Common::busEcef ecef_ft;
-        Common::busvEcef vBE_E_fps;
+        CMN::busLLA lla_ddft;
+        CMN::busEcef ecef_ft;
+        CMN::busvEcef vBE_E_fps;
         double timeStamp_s;
         int fixQuality;
         int nSatellites;
@@ -57,13 +57,13 @@ public:
         bool velocityValid_b;
     };
 
-    Common::busLLA m_LLA = {0.0, 0.0, 0.0};
-    Common::busEcef m_ECEF = {0.0, 0.0, 0.0};
-    Common::busvEcef m_vECEF = {0.0, 0.0, 0.0};
+    CMN::busLLA m_LLA = {0.0, 0.0, 0.0};
+    CMN::busEcef m_ECEF = {0.0, 0.0, 0.0};
+    CMN::busvEcef m_vECEF = {0.0, 0.0, 0.0};
     busGPS m_GPS = {m_LLA, m_ECEF, m_vECEF, 0.0, 0, 0, 0.0, false};
 
 private:
-    Common C;
+    CMN C;
     CFG cfg;
 
     const int _sendUBXDelay_ms = 50;

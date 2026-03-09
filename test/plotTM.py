@@ -2,8 +2,7 @@ import serial
 import threading
 import queue
 import time
-import re
-import traceback
+import struct
 from collections import deque
 import numpy as np
 import pyqtgraph as pg
@@ -14,71 +13,35 @@ from pyqtgraph.Qt import QtCore, QtWidgets
 # SERIAL STREAM
 # ============================================================
 
-def open_serial(port="COM5", baud=115200):
+def open_serial(port="COM3", baud=57600):
     ser = serial.Serial(port, baud, timeout=0)
     return ser
 
 
 # ============================================================
-# PARSER
+# BINARY PACKET READER
 # ============================================================
 
-def parse_group_line(line):
-    if ":" not in line:
-        return None, {}
+HEADER = b'\xAB\xCD'
+STRUCT_FORMAT = "<d bb 17d bb 11d H"
+STRUCT_SIZE = struct.calcsize(STRUCT_FORMAT)
 
-    group, rest = line.split(":", 1)
-    group = group.strip()
 
-    pairs = re.split(r",\s*", rest.strip())
-    data = {}
-
-    for p in pairs:
-        if "=" not in p:
-            continue
-        key, val = p.split("=", 1)
-        key = key.strip()
-        val = val.strip()
-
-        try:
-            if "." in val:
-                val = float(val)
+def crc16_ccitt(data: bytes) -> int:
+    crc = 0xFFFF
+    for byte in data:
+        crc ^= (byte << 8)
+        for _ in range(8):
+            if crc & 0x8000:
+                crc = ((crc << 1) ^ 0x1021) & 0xFFFF
             else:
-                val = int(val)
-        except ValueError:
-            pass
-
-        data[key] = val
-
-    return group, data
+                crc = (crc << 1) & 0xFFFF
+    return crc
 
 
-# ============================================================
-# READ 5-LINE TELEMETRY BLOCK
-# ============================================================
-
-def read_lines_from_serial(ser):
-    # legacy function kept for compatibility; prefer using the background reader queue
-    lines = []
-    # read all available lines (non-blocking because timeout=0)
-    while True:
-        raw = ser.readline()
-        if not raw:
-            break
-        try:
-            line = raw.decode("utf-8", errors="ignore").strip()
-        except Exception:
-            continue
-        if line:
-            lines.append((time.time(), line))
-    return lines
-
-
-# ------------------------
-# Background serial reader
-# ------------------------
-line_queue = queue.Queue()
+packet_queue = queue.Queue()
 serial_stop_event = threading.Event()
+
 
 def serial_reader_thread(port, baud, q, stop_event):
     try:
@@ -88,49 +51,45 @@ def serial_reader_thread(port, baud, q, stop_event):
         return
     while not stop_event.is_set():
         try:
-            raw = ser.readline()
+            # sync to header
+            while True:
+                b = ser.read(1)
+                if not b:
+                    break
+                if b == HEADER[1:2]:
+                    b2 = ser.read(1)
+                    if b2 == HEADER[0:1]:
+                        break
+            if not b:
+                continue
+            # read payload
+            payload = ser.read(STRUCT_SIZE)
+            if len(payload) != STRUCT_SIZE:
+                continue
+            data_without_crc = payload[:-2]
+            received_crc = int.from_bytes(payload[-2:], "little")
+            computed_crc = crc16_ccitt(data_without_crc)
+            if received_crc != computed_crc:
+                continue
+            pkt = struct.unpack(STRUCT_FORMAT, payload)
+            q.put((time.time(), pkt))
         except Exception:
-            break
-        if not raw:
             continue
-        try:
-            line = raw.decode("utf-8", errors="ignore").strip()
-        except Exception:
-            continue
-        if line:
-            q.put((time.time(), line))
     try:
         ser.close()
     except Exception:
         pass
 
-def drain_line_queue():
-    lines = []
+
+def drain_packet_queue():
+    packets = []
     while True:
         try:
-            item = line_queue.get_nowait()
+            item = packet_queue.get_nowait()
         except queue.Empty:
             break
-        lines.append(item)
-    return lines
-
-
-def read_message_block_from_lines(lines):
-    # single telemetry block may span multiple groups; return one block per 5-group block
-    blocks = []
-    block = {}
-    count = 0
-    for t, line in lines:
-        group, data = parse_group_line(line)
-        if group:
-            block[group] = data
-            block["timestamp"] = t
-            count += 1
-        if count >= 5:
-            blocks.append(block)
-            block = {}
-            count = 0
-    return blocks
+        packets.append(item)
+    return packets
 
 
 # ============================================================
@@ -161,30 +120,34 @@ history = {
 }
 
 
-def append_block(block):
-    t = block.get("timestamp", time.time())
-    imu = block.get("imu", {})
-    gdc = block.get("gdc", {})
-    gps = block.get("gps", {})
+def append_packet(timestamp, pkt):
+    # Unpack according to busTM structure
+    # pkt: met_s, stp_ms, phs, ax_fps2, ay_fps2, az_fps2, gx_dps, gy_dps, gz_dps, roll_d, pitch_d, yaw_d,
+    # timeStamp_s, latG_d, lon_d, HAE_ft, vECEF_X_fps, vECEF_Y_fps, vECEF_Z_fps, hdop, fixQual, nSatellites,
+    # pbC_dps, nyC_B_fps2, nzC_B_fps2, pwrCmd_pct,
+    # rollIntegralError, pitchIntegralError, yawIntegralError, effectorCmd0, effectorCmd1, effectorCmd2, effectorCmd3, crc
+    (met_s, stp_ms, phs, ax_fps2, ay_fps2, az_fps2, gx_dps, gy_dps, gz_dps, roll_d, pitch_d, yaw_d,
+     timeStamp_s, latG_d, lon_d, HAE_ft, vECEF_X_fps, vECEF_Y_fps, vECEF_Z_fps, hdop, fixQual, nSatellites,
+     pbC_dps, nyC_B_fps2, nzC_B_fps2, pwrCmd_pct,
+     rollIntegralError, pitchIntegralError, yawIntegralError, effectorCmd0, effectorCmd1, effectorCmd2, effectorCmd3, crc) = pkt
 
-    history["t"].append(t)
-    history["ax"].append(imu.get("ax_fps2", np.nan))
-    history["ay"].append(imu.get("ay_fps2", np.nan))
-    history["az"].append(imu.get("az_fps2", np.nan))
-    history["gx"].append(imu.get("gx_dps", np.nan))
-    history["gy"].append(imu.get("gy_dps", np.nan))
-    history["gz"].append(imu.get("gz_dps", np.nan))
-    history["roll"].append(imu.get("roll_d", np.nan))
-    history["pitch"].append(imu.get("pitch_d", np.nan))
-    history["yaw"].append(imu.get("yaw_d", np.nan))
-    history["pb"].append(gdc.get("pbCmd_dps", np.nan))
-    history["ny"].append(gdc.get("nyCmd_B_fps2", np.nan))
-    history["nz"].append(gdc.get("nzCmd_B_fps2", np.nan))
-    history["throttle"].append(gdc.get("throttleCmd_pct", np.nan))
-    history["lat"].append(gps.get("latG_d", np.nan))
-    history["lon"].append(gps.get("lon_d", np.nan))
-    # GPS altitude (Height Above Ellipsoid) in feet in telemetry logs
-    history["alt"].append(gps.get("HAE_ft", np.nan))
+    history["t"].append(timestamp)
+    history["ax"].append(ax_fps2)
+    history["ay"].append(ay_fps2)
+    history["az"].append(az_fps2)
+    history["gx"].append(gx_dps)
+    history["gy"].append(gy_dps)
+    history["gz"].append(gz_dps)
+    history["roll"].append(roll_d)
+    history["pitch"].append(pitch_d)
+    history["yaw"].append(yaw_d)
+    history["pb"].append(pbC_dps)
+    history["ny"].append(nyC_B_fps2)
+    history["nz"].append(nzC_B_fps2)
+    history["throttle"].append(pwrCmd_pct)
+    history["lat"].append(latG_d)
+    history["lon"].append(lon_d)
+    history["alt"].append(HAE_ft)
 
 
 # ============================================================
@@ -200,19 +163,22 @@ ax_euler = win.addPlot(row=0, col=0, title="Euler Angles (deg)")
 ax_euler.showGrid(x=True, y=True)
 ax_euler.addLegend()
 euler_colors = ("m", "y", "c")
-euler_lines = [ax_euler.plot(pen=pg.mkPen(color=c, width=1), name=l) for l, c in zip(("roll", "pitch", "yaw"), euler_colors)]
+euler_lines = [ax_euler.plot(pen=pg.mkPen(color=c, width=1), name=l)
+               for l, c in zip(("roll", "pitch", "yaw"), euler_colors)]
 
 ax_gyro = win.addPlot(row=1, col=0, title="Gyros (deg/s)")
 ax_gyro.showGrid(x=True, y=True)
 ax_gyro.addLegend()
 gyro_colors = ("#1f77b4", "#ff7f0e", "#2ca02c")
-gyro_lines = [ax_gyro.plot(pen=pg.mkPen(color=c, width=1), name=l) for l, c in zip(("gx", "gy", "gz"), gyro_colors)]
+gyro_lines = [ax_gyro.plot(pen=pg.mkPen(color=c, width=1), name=l)
+              for l, c in zip(("gx", "gy", "gz"), gyro_colors)]
 
 ax_accel = win.addPlot(row=2, col=0, title="Accelerations (fps²)")
 ax_accel.showGrid(x=True, y=True)
 ax_accel.addLegend()
 accel_colors = ("r", "g", "b")
-accel_lines = [ax_accel.plot(pen=pg.mkPen(color=c, width=1), name=l) for l, c in zip(("ax", "ay", "az"), accel_colors)]
+accel_lines = [ax_accel.plot(pen=pg.mkPen(color=c, width=1), name=l)
+               for l, c in zip(("ax", "ay", "az"), accel_colors)]
 
 # Right column: GPS lat/lon/alt (strip charts) and GDC commands
 ax_lat = win.addPlot(row=0, col=1, title="Latitude (deg)")
@@ -231,7 +197,8 @@ ax_gdc = win.addPlot(row=3, col=1, title="GDC Commands")
 ax_gdc.showGrid(x=True, y=True)
 ax_gdc.addLegend()
 gdc_colors = ("#d62728", "#ff7f0e", "#2ca02c", "#9467bd")
-gdc_lines = [ax_gdc.plot(pen=pg.mkPen(color=c, width=1), name=l) for l, c in zip(("pbCmd_dps", "nyCmd", "nzCmd", "throttle"), gdc_colors)]
+gdc_lines = [ax_gdc.plot(pen=pg.mkPen(color=c, width=1), name=l) for l, c in zip(
+    ("pbCmd_dps", "nyCmd", "nzCmd", "throttle"), gdc_colors)]
 
 frame_count = 0
 Y_RECALC_PERIOD = 10  # recalc y-limits every N frames
@@ -247,13 +214,10 @@ def update():
         return
     updating = True
     try:
-        # read all available lines from background reader queue
-        lines = drain_line_queue()
-        blocks = []
-        if lines:
-            blocks = read_message_block_from_lines(lines)
-        for b in blocks:
-            append_block(b)
+        # read all available packets from background reader queue
+        packets = drain_packet_queue()
+        for t, pkt in packets:
+            append_packet(t, pkt)
 
         t = np.array(history["t"])
         # If we don't have any telemetry yet, set axes to a moving window
@@ -266,7 +230,8 @@ def update():
             # diagnostic queue size occasionally
             if frame_count % 200 == 0:
                 try:
-                    print(f"no-data: queue_size={line_queue.qsize()} skip_count={skip_count}")
+                    print(
+                        f"no-data: queue_size={packet_queue.qsize()} skip_count={skip_count}")
                 except Exception:
                     pass
             frame_count += 1
@@ -364,13 +329,17 @@ def update():
 # MAIN
 # ============================================================
 
-# start background serial reader thread (reads serial and enqueues lines)
-serial_thread = threading.Thread(target=serial_reader_thread, args=("COM3", 57600, line_queue, serial_stop_event), daemon=True)
+# start background serial reader thread (reads serial and enqueues packets)
+serial_thread = threading.Thread(target=serial_reader_thread, args=(
+    "COM3", 57600, packet_queue, serial_stop_event), daemon=True)
 serial_thread.start()
 
 # ensure background thread stops when the Qt app exits
+
+
 def _stop_serial():
     serial_stop_event.set()
+
 
 app.aboutToQuit.connect(_stop_serial)
 

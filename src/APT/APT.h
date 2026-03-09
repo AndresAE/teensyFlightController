@@ -4,7 +4,7 @@
 #include <cmath>
 #include <Arduino.h>
 #include <Servo.h>
-#include "../Common/Common.h"
+#include "../CMN/CMN.h"
 #include "../TST/TST.h"
 #include "../MSN/MSN.h"
 #include "../GDC/GDC.h"
@@ -74,7 +74,7 @@ public:
   IMU &m_IMU_obj;
 
 private:
-  Common C;
+  CMN C;
   CFG cfg;
 
   const CFG::aptParams &aptParams;

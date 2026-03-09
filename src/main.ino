@@ -91,7 +91,7 @@ void loop()
     {
       if (fcsParams.useTM_b)
       {
-        printStatusBin(serialPort, now_ms, endTime_ms, tst, msn, imu, gps, nav, gdc, apt);
+        printStatusRaw(serialPort, now_ms, endTime_ms, tst, msn, imu, gps, nav, gdc, apt);
       }
       else
       {

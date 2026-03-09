@@ -1,11 +1,11 @@
 #include <cmath>
 // #include <Arduino.h>
 // #include <cstdint>
-#include "../src/common/Common.h"
+#include "../src/CMN/CMN.h"
 #include "iostream"
 #include <iomanip>
 
-Common C;
+CMN C;
 
 const int _sendUBXDelay_ms = 50;
 char _c;
@@ -24,9 +24,9 @@ bool _velocityValid_b = false;
 // bus definitions
 struct busGPS
 {
-    Common::busLLA lla_ddft;
-    Common::busEcef ecef_ft;
-    Common::busvEcef vBE_E_fps;
+    CMN::busLLA lla_ddft;
+    CMN::busEcef ecef_ft;
+    CMN::busvEcef vBE_E_fps;
     double timeStamp_s;
     int fixQuality;
     int nSatellites;
@@ -34,9 +34,9 @@ struct busGPS
     bool velocityValid_b;
 };
 
-Common::busLLA m_LLA = {0.0, 0.0, 0.0};
-Common::busEcef m_ECEF = {0.0, 0.0, 0.0};
-Common::busvEcef m_vECEF = {0.0, 0.0, 0.0};
+CMN::busLLA m_LLA = {0.0, 0.0, 0.0};
+CMN::busEcef m_ECEF = {0.0, 0.0, 0.0};
+CMN::busvEcef m_vECEF = {0.0, 0.0, 0.0};
 busGPS m_GPS = {m_LLA, m_ECEF, m_vECEF, 0.0, 0, 0, 0.0, false};
 
 void splitNMEA(std::string s, std::string *fields, int maxFields)
@@ -102,7 +102,7 @@ int main()
     std::cout << "ECEF: " << m_GPS.ecef_ft.x_ft << ", " << m_GPS.ecef_ft.y_ft << ", " << m_GPS.ecef_ft.z_ft << "\n";
 }
 
-// g++ -std=c++11 navTest.cpp src/Common/Common.cpp -I src/common -o test_app
+// g++ -std=c++11 navTest.cpp src/CMN/CMN.cpp -I src/CMN -o test_app
 // ./test_app
 // Expected output:
 // Result of matrix multiplication:

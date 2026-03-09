@@ -3,7 +3,7 @@
 
 #include <cmath>
 #include <Arduino.h>
-#include "../Common/Common.h"
+#include "../CMN/CMN.h"
 #include "../CFG/CFG.h"
 
 class IMU
@@ -70,7 +70,7 @@ public:
   busIMU m_IMU = {m_States, m_Euler};
 
 private:
-  Common C;
+  CMN C;
   CFG cfg;
 
   const CFG::imuParams &imuParams = cfg.getImuParams();

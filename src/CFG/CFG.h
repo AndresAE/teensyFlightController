@@ -1,6 +1,6 @@
 #ifndef CFG_H
 #define CFG_H
-#include "../Common/Common.h"
+#include "../CMN/CMN.h"
 
 class CFG
 {
@@ -75,14 +75,14 @@ public:
             {0.0, 0.0, 0.0},  // rudder (+TEL)
             {1.0, 0.0, 0.0}}; // throttle
         static const int nMappingBP = 5;
-        Common::matrix servoMappingBreakpoints = {
+        CMN::matrix servoMappingBreakpoints = {
             nEffector,
             nMappingBP,
             {{-17.5, -10.0, 0.0, 10.0, 17.5},
              {-27.0, -12.0, 13.0, 27.0, 37.0},
              {-37.0, -19.0, 0.0, 19.0, 37.0},
              {0.0, 0.25, 0.5, 0.75, 1.0}}};
-        Common::matrix servoMappingTable = {
+        CMN::matrix servoMappingTable = {
             nEffector,
             nMappingBP,
             {{30.0, 60.0, 90.0, 120.0, 150.0},
@@ -135,7 +135,7 @@ public:
     struct msnParams
     {
         int takeoffDebounceLimit = 3;
-        float takeoffThreshold_fps2 = 5.0;
+        float takeoffThreshold_fps2 = 10.0;
     };
 
     fcsParams fcsParams_;

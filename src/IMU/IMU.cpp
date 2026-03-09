@@ -86,9 +86,9 @@ void IMU::step()
   m_eulerRate.phiDot_dps = m_States.angularRateX_dps + _sinR * _tanP * m_States.angularRateY_dps + _cosR * _tanP * m_States.angularRateZ_dps;
   m_eulerRate.thetaDot_dps = _cosR * m_States.angularRateY_dps - _sinR * m_States.angularRateZ_dps;
   m_eulerRate.psiDot_dps = (_sinR * _secP) * m_States.angularRateY_dps + (_cosR * _secP) * m_States.angularRateZ_dps;
-  m_Euler.roll_d = C.trapIntegral(m_eulerRate.phiDot_dps, m_eulerRatePrev.phiDot_dps, m_Euler.roll_d, dt_s);
-  m_Euler.pitch_d = C.trapIntegral(m_eulerRate.thetaDot_dps, m_eulerRatePrev.thetaDot_dps, m_Euler.pitch_d, dt_s);
-  m_Euler.yaw_d = C.trapIntegral(m_eulerRate.psiDot_dps, m_eulerRatePrev.psiDot_dps, m_Euler.yaw_d, dt_s);
+  m_Euler.roll_d = C.tustinIntegral(m_eulerRate.phiDot_dps, m_eulerRatePrev.phiDot_dps, m_Euler.roll_d, dt_s);
+  m_Euler.pitch_d = C.tustinIntegral(m_eulerRate.thetaDot_dps, m_eulerRatePrev.thetaDot_dps, m_Euler.pitch_d, dt_s);
+  m_Euler.yaw_d = C.tustinIntegral(m_eulerRate.psiDot_dps, m_eulerRatePrev.psiDot_dps, m_Euler.yaw_d, dt_s);
   m_eulerRatePrev = m_eulerRate;
 
   m_IMU = {m_States, m_Euler};

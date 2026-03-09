@@ -3,7 +3,7 @@
 
 #include <cmath>
 #include <Arduino.h>
-#include "../Common/Common.h"
+#include "../CMN/CMN.h"
 #include "../CFG/CFG.h"
 
 class TST
@@ -45,7 +45,7 @@ public:
   busTST m_TST;
 
 private:
-  Common C;
+  CMN C;
   CFG cfg;
 
   unsigned long _pw;

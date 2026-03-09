@@ -35,14 +35,14 @@ void NAV::predictState()
     // transform gravity to ecef
     _ned2bodyMatrix = C.getNed2body(_ned2bodyMatrix, m_IMU_obj.m_Euler.roll_d, m_IMU_obj.m_Euler.pitch_d, m_IMU_obj.m_Euler.yaw_d);
     _body2ecefMatrix = C.getBody2ecef(_body2ecefMatrix, m_NAV.latG_d, m_NAV.lon_d, m_IMU_obj.m_Euler.roll_d, m_IMU_obj.m_Euler.pitch_d, m_IMU_obj.m_Euler.yaw_d);
-    Common::matrix _gravityB_fps2 = C.matrixMultiply(_ned2bodyMatrix, _gravityNED_fps2);
-    Common::matrix _w_rps = {3, 1, {{static_cast<float>(m_IMU_obj.m_IMU.states.angularRateX_dps * C.DEG2RAD)}, {static_cast<float>(m_IMU_obj.m_IMU.states.angularRateY_dps * C.DEG2RAD)}, {static_cast<float>(m_IMU_obj.m_IMU.states.angularRateZ_dps * C.DEG2RAD)}}};
+    CMN::matrix _gravityB_fps2 = C.matrixMultiply(_ned2bodyMatrix, _gravityNED_fps2);
+    CMN::matrix _w_rps = {3, 1, {{static_cast<float>(m_IMU_obj.m_IMU.states.angularRateX_dps * C.DEG2RAD)}, {static_cast<float>(m_IMU_obj.m_IMU.states.angularRateY_dps * C.DEG2RAD)}, {static_cast<float>(m_IMU_obj.m_IMU.states.angularRateZ_dps * C.DEG2RAD)}}};
 
     _vb_fps = {3, 1, {{static_cast<float>(m_NAV.u_fps2)}, {static_cast<float>(m_NAV.v_fps2)}, {static_cast<float>(m_NAV.w_fps2)}}};
 
-    Common::matrix _wxv = C.crossProductMatrix(_w_rps, _vb_fps);
+    CMN::matrix _wxv = C.crossProductMatrix(_w_rps, _vb_fps);
 
-    Common::matrix _tmp = C.matrixAdd(_sf_fps2, _gravityB_fps2);
+    CMN::matrix _tmp = C.matrixAdd(_sf_fps2, _gravityB_fps2);
     _Umat = C.matrixMultiply(_body2ecefMatrix, C.matrixAdd(_tmp, _wxv));
 
     _Xmat = C.matrixAdd(C.matrixMultiply(_F, _Xmat), C.matrixMultiply(_Bmat, _Umat));
@@ -56,8 +56,8 @@ void NAV::updateState()
     _Z.m[1][0] = static_cast<float>(m_GPS_obj.m_ECEF.y_ft);
     _Z.m[2][0] = static_cast<float>(m_GPS_obj.m_ECEF.z_ft);
 
-    Common::matrix temp = C.matrixAdd(C.matrixMultiply(_H, C.matrixMultiply(_Pmat, C.matrixTranspose(_H))), _R);
-    Common::matrix tempInv = C.matrixInverse(temp);
+    CMN::matrix temp = C.matrixAdd(C.matrixMultiply(_H, C.matrixMultiply(_Pmat, C.matrixTranspose(_H))), _R);
+    CMN::matrix tempInv = C.matrixInverse(temp);
     _K = C.matrixMultiply(C.matrixMultiply(_Pmat, C.matrixTranspose(_H)), tempInv);
 
     _Xmat = C.matrixAdd(_Xmat, C.matrixMultiply(_K, C.matrixAdd(_Z, C.matrixMultiply(_H, _Xmat), true)));
@@ -78,7 +78,7 @@ void NAV::updateState()
 void NAV::posEcef2lla()
 {
     // ECEF to LLA conversion logic
-    Common::busLLA lla = C.ecef2lla({m_NAV.xECEF_ft, m_NAV.yECEF_ft, m_NAV.zECEF_ft});
+    CMN::busLLA lla = C.ecef2lla({m_NAV.xECEF_ft, m_NAV.yECEF_ft, m_NAV.zECEF_ft});
     m_NAV.latG_d = lla.latG_d;
     m_NAV.lon_d = lla.lon_d;
     m_NAV.hae_ft = lla.hae_ft;
@@ -87,8 +87,8 @@ void NAV::posEcef2lla()
 void NAV::velEcef2ned()
 {
     _ned2ecefMatrix = C.getNed2ecef(_ned2ecefMatrix, m_NAV.latG_d, m_NAV.lon_d);
-    Common::matrix velECEF = {3, 1, {{static_cast<float>(m_NAV.vxECEF_fps)}, {static_cast<float>(m_NAV.vyECEF_fps)}, {static_cast<float>(m_NAV.vzECEF_fps)}}};
-    Common::matrix velNED = C.matrixMultiply(_ned2ecefMatrix, velECEF);
+    CMN::matrix velECEF = {3, 1, {{static_cast<float>(m_NAV.vxECEF_fps)}, {static_cast<float>(m_NAV.vyECEF_fps)}, {static_cast<float>(m_NAV.vzECEF_fps)}}};
+    CMN::matrix velNED = C.matrixMultiply(_ned2ecefMatrix, velECEF);
     m_NAV.vN_fps = velNED.m[0][0];
     m_NAV.vE_fps = velNED.m[1][0];
     m_NAV.vD_fps = velNED.m[2][0];
@@ -97,8 +97,8 @@ void NAV::velEcef2ned()
 void NAV::velNed2body()
 {
     _ned2bodyMatrix = C.getNed2body(_ned2bodyMatrix, m_IMU_obj.m_Euler.roll_d, m_IMU_obj.m_Euler.pitch_d, m_IMU_obj.m_Euler.yaw_d);
-    Common::matrix velNED = {3, 1, {{static_cast<float>(m_NAV.vN_fps)}, {static_cast<float>(m_NAV.vE_fps)}, {static_cast<float>(m_NAV.vD_fps)}}};
-    Common::matrix velBody = C.matrixMultiply(C.matrixTranspose(_ned2bodyMatrix), velNED);
+    CMN::matrix velNED = {3, 1, {{static_cast<float>(m_NAV.vN_fps)}, {static_cast<float>(m_NAV.vE_fps)}, {static_cast<float>(m_NAV.vD_fps)}}};
+    CMN::matrix velBody = C.matrixMultiply(C.matrixTranspose(_ned2bodyMatrix), velNED);
     m_NAV.u_fps2 = velBody.m[0][0];
     m_NAV.v_fps2 = velBody.m[1][0];
     m_NAV.w_fps2 = velBody.m[2][0];

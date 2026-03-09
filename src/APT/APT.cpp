@@ -136,7 +136,7 @@ void APT::rollInnerLoop()
     }
     else
     {
-      _rollIntegralError = C.trapIntegral(_rollError, _rollErrorPrev, _rollIntegralError, dt_s);
+      _rollIntegralError = C.tustinIntegral(_rollError, _rollErrorPrev, _rollIntegralError, dt_s);
     }
     _rollErrorPrev = _rollError;
     _xiRoll = _rollIntegralError * aptParams.gains.rollRate.K_i;
@@ -202,7 +202,7 @@ void APT::pitchInnerLoop()
     }
     else
     {
-      _pitchIntegralError = C.trapIntegral(_pitchError, _pitchErrorPrev, _pitchIntegralError, dt_s);
+      _pitchIntegralError = C.tustinIntegral(_pitchError, _pitchErrorPrev, _pitchIntegralError, dt_s);
     }
     _pitchErrorPrev = _pitchError;
     _xiPitch = _pitchIntegralError * aptParams.gains.pitchRate.K_i;
@@ -264,7 +264,7 @@ void APT::yawInnerLoop()
     }
     else
     {
-      _yawIntegralError = C.trapIntegral(_yawError, _yawErrorPrev, _yawIntegralError, dt_s);
+      _yawIntegralError = C.tustinIntegral(_yawError, _yawErrorPrev, _yawIntegralError, dt_s);
     }
     _yawErrorPrev = _yawError;
     _xiYaw = _yawIntegralError * aptParams.gains.yawRate.K_i;

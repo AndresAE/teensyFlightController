@@ -1,11 +1,11 @@
-#ifndef COMMON_H
-#define COMMON_H
+#ifndef CMN_H
+#define CMN_H
 #include <cmath>
 
-class Common
+class CMN
 {
 public:
-    Common();
+    CMN();
 
     double _PI = 3.141592653589793;
     double GRAVITY_fps2 = 32.174;    // ft/s²
@@ -53,12 +53,12 @@ public:
     double abs(double x);
     int sign(double x);
     double calcAlpha(double cutoff_Hz, double dt_s);
-    double trapIntegral(double x, double x_prev, double y, double dt_s);
+    double tustinIntegral(double x, double x_prev, double y, double dt_s);
     double lowPassFilter(double x, double x_prev, double alpha);
     double filteredDerivative(double x, double x_prev, double derivPrev, double alpha, double dt_s);
-    double primeVerticalRadiusOfCurvature(double latG_d);
-    double interpolate(matrix xArray, matrix yArray, double x, int rowIndex);
     double protectedDivide(double numerator, double denominator, double threshold = 1e-6);
+    double interpolate(matrix xArray, matrix yArray, double x, int rowIndex);
+    double primeVerticalRadiusOfCurvature(double latG_d);
 
     matrix getNed2body(matrix ned2body, double roll_d, double pitch_d, double yaw_d);
     matrix getBody2ned(matrix body2ned, double roll_d, double pitch_d, double yaw_d);
@@ -83,4 +83,4 @@ private:
     busLLA m_LLA = {0.0, 0.0, 0.0};
     busEcef m_ECEF = {0.0, 0.0, 0.0};
 };
-#endif // COMMON_H
+#endif // CMN_H

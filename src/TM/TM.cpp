@@ -127,7 +127,7 @@ void printStatus(Stream &serialPort, int now_ms, int endTime_ms, TST &tst, MSN &
         serialPort.println(s);
     }
 
-    // apt block
+    // apt effector block
     {
         String s;
         s.reserve(160);
@@ -144,7 +144,7 @@ void printStatus(Stream &serialPort, int now_ms, int endTime_ms, TST &tst, MSN &
         }
         serialPort.println(s);
     }
-    // apt block 2
+    // apt saturation block
     {
         String s;
         s.reserve(160);
@@ -161,7 +161,7 @@ void printStatus(Stream &serialPort, int now_ms, int endTime_ms, TST &tst, MSN &
         serialPort.println(s);
     }
 
-    // apt block 3
+    // apt inner loop block
     {
         String s;
         s.reserve(80);
@@ -174,7 +174,7 @@ void printStatus(Stream &serialPort, int now_ms, int endTime_ms, TST &tst, MSN &
         serialPort.println(s);
     }
 
-    // apt block 4
+    // apt integral block
     {
         String s;
         s.reserve(80);
@@ -188,7 +188,7 @@ void printStatus(Stream &serialPort, int now_ms, int endTime_ms, TST &tst, MSN &
     }
 }
 
-void printStatusBin(Stream &serialPort, int now_ms, int endTime_ms, TST &tst, MSN &msn, IMU &imu, GPS &gps, NAV &nav, GDC &gdc, APT &apt)
+void printStatusRaw(Stream &serialPort, int now_ms, int endTime_ms, TST &tst, MSN &msn, IMU &imu, GPS &gps, NAV &nav, GDC &gdc, APT &apt)
 {
     busTM tmOut;
     tmOut.header = 0xABCD;

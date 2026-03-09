@@ -44,9 +44,9 @@ void GPS::step()
 
   if (gpsGood_b && (m_GPS.timeStamp_s - _timeStampPrev_s) > 0.0)
   {
-    m_vECEF.x_fps = C.Common::filteredDerivative(m_GPS.ecef_ft.x_ft, _ecef_prev[0], m_vECEF.x_fps, _alpha, dt_s);
-    m_vECEF.y_fps = C.Common::filteredDerivative(m_GPS.ecef_ft.y_ft, _ecef_prev[1], m_vECEF.y_fps, _alpha, dt_s);
-    m_vECEF.z_fps = C.Common::filteredDerivative(m_GPS.ecef_ft.z_ft, _ecef_prev[2], m_vECEF.z_fps, _alpha, dt_s);
+    m_vECEF.x_fps = C.CMN::filteredDerivative(m_GPS.ecef_ft.x_ft, _ecef_prev[0], m_vECEF.x_fps, _alpha, dt_s);
+    m_vECEF.y_fps = C.CMN::filteredDerivative(m_GPS.ecef_ft.y_ft, _ecef_prev[1], m_vECEF.y_fps, _alpha, dt_s);
+    m_vECEF.z_fps = C.CMN::filteredDerivative(m_GPS.ecef_ft.z_ft, _ecef_prev[2], m_vECEF.z_fps, _alpha, dt_s);
     _velocityValid_b = true;
   }
   _ecef_prev[0] = m_GPS.ecef_ft.x_ft;
