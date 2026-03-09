@@ -89,8 +89,14 @@ void loop()
     endTime_ms = millis();
     if (now_ms >= nextSlowTask_ms)
     {
-      printStatus(serialPort, now_ms, endTime_ms, tst, msn, imu, gps, nav, gdc, apt);
-      // printStatusBin(serialPort, now_ms, endTime_ms, tst, msn, imu, gps, nav, gdc, apt);
+      if (fcsParams.useTM_b)
+      {
+        printStatusBin(serialPort, now_ms, endTime_ms, tst, msn, imu, gps, nav, gdc, apt);
+      }
+      else
+      {
+        printStatus(serialPort, now_ms, endTime_ms, tst, msn, imu, gps, nav, gdc, apt);
+      }
       nextSlowTask_ms += dtSlow_ms;
     }
     nextTask_ms += dt_ms;

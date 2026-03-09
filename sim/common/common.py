@@ -6,6 +6,8 @@ class common:
         self.r2d = 180/np.pi  # radians to degrees conversion factor
         self.d2r = np.pi/180  # degrees to radians conversion factor
         self.g_ftps2 = 32.174  # gravitational acceleration in ft/s^2
+        self.ft2in = 12  # foot to inch
+        self.in2ft = 1/12  # inch to foot
 
     def ecef2bodyTransformation(self, lla_ddft, euler_d):
         # Placeholder for ECEF to body frame conversion

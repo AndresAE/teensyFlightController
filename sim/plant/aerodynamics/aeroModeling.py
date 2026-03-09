@@ -17,3 +17,15 @@ class aeroModeling:
         """Polhamus approximation for lift curve slope of a 3D wing."""
         k = 1+(8.2-aspectRatio*0.22)/100
         return cla * aspectRatio / (np.sqrt(4 + (aspectRatio**2)/k) + 2)
+
+    def planformArea(self, span, cRoot, cTip):
+        """Calculate wing area."""
+        return 0.5*(cRoot+cTip)*span
+
+    def aspectRatio(self, span, area):
+        """Calculate aspect ratio."""
+        return (span**2)/area
+
+    def taperRatio(self, cRoot, cTip):
+        """Calculate aspect ratio."""
+        return cTip/cRoot

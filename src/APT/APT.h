@@ -112,9 +112,6 @@ private:
   int _init_us;
   double _meanPWM;
   Servo _servos[CFG::aptParams::nEffector];
-
-  Common::matrix _breakpoints = {CFG::aptParams::nEffector, CFG::aptParams::nMappingBP, {{0}}};
-  Common::matrix _array = {CFG::aptParams::nEffector, CFG::aptParams::nMappingBP, {{0}}};
 };
 
 #endif // APT_H

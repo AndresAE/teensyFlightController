@@ -25,7 +25,7 @@
 - [x] hardware abstraction layer to make IMU, GPS, ans servo independent
 - [ ] zero protected divides, common?
 - [x] initialize APT params based on effector size
-- [ ] initialize GDC cpp params based on input size
+- [x] initialize GDC cpp params based on input size
 - [x] kalman filter for bad intermittent GPS
 - [ ] time of validity for IMU, GPS, GDC commands
 - [x] 'Direct' law for GDC commands
@@ -46,3 +46,4 @@
 - [x] msnMgr, keep integral off until thrown
 - [x] rename Config->CFG
 - [x] interpolation mapping
+- [ ] test defelctions

@@ -57,7 +57,7 @@ public:
     double lowPassFilter(double x, double x_prev, double alpha);
     double filteredDerivative(double x, double x_prev, double derivPrev, double alpha, double dt_s);
     double primeVerticalRadiusOfCurvature(double latG_d);
-    double interpolate(matrix xArray, matrix yArray, double x);
+    double interpolate(matrix xArray, matrix yArray, double x, int rowIndex);
     double protectedDivide(double numerator, double denominator, double threshold = 1e-6);
 
     matrix getNed2body(matrix ned2body, double roll_d, double pitch_d, double yaw_d);

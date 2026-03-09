@@ -23,18 +23,15 @@ class controller():
 
     def step(self, x, u_cmd, dt_s):
         ka_phi = 5
-        ka_nz = -50
         ka_ny = 50
         kd_p = 1  # 2.43
         ki_p = 1/100
-        kd_q = 1/100  # 1.58
-        ki_q = 5
         kd_r = -1  # 1.75
         ki_r = 2
-        pitchLimit = 30
 
+        pitchLimit = 30
         ka_nz = -1.5
-        kd_q = 1  # 1.58
+        kd_q = 0.5  # 1.58
         ki_q = 1
 
         mixing = np.array([[1, 0, 0],
@@ -106,29 +103,27 @@ qBar_psf = 0.5*rho_slugft3*v_fps**2
 
 # estimates
 weight_lb = 1.5
-xcg_ft = 11.25/12
+xcg_ft = 11.25*cmn.in2ft
 
-cRoot_wing_ft = 7.5/12
-cTip_wing_ft = 7.5/12
-b_wing_ft = 47/12
+cRoot_wing_ft = 7.5*cmn.in2ft
+cTip_wing_ft = 7.5*cmn.in2ft
+b_wing_ft = 47*cmn.in2ft
 sweepLE_wing_d = 0
-xLE_wing_ft = 9.5/12
-ybStart_wing_ft = 0.7
-ybEnd_wing_ft = 0.9
+xLE_wing_ft = 9.5*cmn.in2ft
 tau_wing = 0.25
 
-cRoot_ht_ft = 5/12
-cTip_ht_ft = 5/12
-b_ht_ft = 16.5/12
+cRoot_ht_ft = 5*cmn.in2ft
+cTip_ht_ft = 5*cmn.in2ft
+b_ht_ft = 16.5*cmn.in2ft
 sweepLE_ht_d = 0
-xLE_ht_ft = 30.5/12
+xLE_ht_ft = 30.5*cmn.in2ft
 ybStart_ht_ft = 0.7
 ybEnd_ht_ft = 0.9
 tau_ht = 1.5/5
 
-s_wing_ft2 = 0.5*(cRoot_wing_ft+cTip_wing_ft)*b_wing_ft
-taper_wing = cTip_wing_ft/cRoot_wing_ft
-aspectRatio_wing = b_wing_ft**2/s_wing_ft2
+s_wing_ft2 = aeroMdl.planformArea(b_wing_ft, cRoot_wing_ft, cTip_wing_ft)
+taper_wing = aeroMdl.taperRatio(cRoot_wing_ft, cTip_wing_ft)
+aspectRatio_wing = aeroMdl.aspectRatio(b_wing_ft, s_wing_ft2)
 CLa_wing = aeroMdl.polhamus(aspectRatio_wing)
 mac_wing_ft = aeroMdl.meanAerodynamicChord(cRoot_wing_ft, taper_wing)
 yMac_wing_ft = aeroMdl.meanAerodynamicChordSpanwise(
@@ -139,9 +134,9 @@ Sref_ft2 = s_wing_ft2
 xRef_ft = mac_wing_ft
 xcgHat = xcg_ft / mac_wing_ft
 
-s_ht_ft2 = 0.5*(cRoot_ht_ft+cTip_ht_ft)*b_ht_ft
-taper_ht = cTip_ht_ft/cRoot_ht_ft
-aspectRatio_ht = b_ht_ft**2/s_ht_ft2
+s_ht_ft2 = aeroMdl.planformArea(b_ht_ft, cRoot_ht_ft, cTip_ht_ft)
+taper_ht = aeroMdl.taperRatio(cRoot_ht_ft, cTip_ht_ft)
+aspectRatio_ht = aeroMdl.aspectRatio(b_ht_ft, s_ht_ft2)
 CLa_ht = aeroMdl.polhamus(aspectRatio_ht)
 mac_ht_ft = aeroMdl.meanAerodynamicChord(cRoot_ht_ft, taper_ht)
 yMac_ht_ft = aeroMdl.meanAerodynamicChordSpanwise(

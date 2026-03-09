@@ -80,8 +80,7 @@ void APT::evalDirect()
   // In direct mode, APT does not modify commands; they are passed through from TST to effectors
   for (int ii = 0; ii < _nEffectors; ii++)
   {
-    _meanPWM = (aptParams.muMin_us[ii] + aptParams.muMax_us[ii]) / 2;
-    m_APT.effectorCmd[ii] = (((aptParams.directModeGain[ii] * (static_cast<double>(m_TST_obj.m_TST.controlIn_us[ii]) - _meanPWM) + _meanPWM) - aptParams.muMin_us[ii]) / (aptParams.muMax_us[ii] - aptParams.muMin_us[ii])) * aptParams.servoRange_d[ii] - aptParams.effectorOffset[ii];
+    m_APT.effectorCmd[ii] = aptParams.directModeGain[ii] * ((static_cast<double>(m_TST_obj.m_TST.controlIn_us[ii]) - aptParams.muMin_us[ii]) / (aptParams.muMax_us[ii] - aptParams.muMin_us[ii]) * (aptParams.effectorLimitHi[ii] - aptParams.effectorLimitLo[ii]) + aptParams.effectorLimitLo[ii]);
   }
 
   _prevRollState_e = GDC::gdcRollMode::GRM_UNDEFINED;
@@ -347,9 +346,16 @@ void APT::setupEffectors()
   _nEffectors = static_cast<int>(sizeof(m_APT.effectorCmd) / sizeof(m_APT.effectorCmd[0]));
   for (int ii = 0; ii < _nEffectors; ii++)
   {
+    m_APT.effectorCmd[ii] = aptParams.effectorOffset[ii];
+  }
+
+  mapServos();
+
+  for (int ii = 0; ii < _nEffectors; ii++)
+  {
     // attach servo to pin and initialize to offset position
     _servos[ii].attach(aptParams.effectorPins[ii]);
-    _init_us = static_cast<int>((aptParams.effectorOffset[ii] / aptParams.servoRange_d[ii]) *
+    _init_us = static_cast<int>((m_APT.effectorCmd[ii] / aptParams.servoRange_d[ii]) *
                                     (aptParams.muMax_us[ii] - aptParams.muMin_us[ii]) +
                                 aptParams.muMin_us[ii]);
     _servos[ii].writeMicroseconds(_init_us);
@@ -377,11 +383,6 @@ void APT::mapServos()
 {
   for (int ii = 0; ii < _nEffectors; ii++)
   {
-    for (int jj = 0; jj < CFG::aptParams::nMappingBP; jj++)
-    {
-      _breakpoints.m[ii][jj] = aptParams.servoMappingBreakpoints.m[jj][ii];
-      _array.m[ii][jj] = aptParams.servoMappingTable.m[jj][ii];
-    }
-    m_APT.effectorCmd[ii] = C.interpolate(_breakpoints, _array, m_APT.effectorCmd[ii]);
+    m_APT.effectorCmd[ii] = C.interpolate(aptParams.servoMappingBreakpoints, aptParams.servoMappingTable, m_APT.effectorCmd[ii], ii);
   }
 }

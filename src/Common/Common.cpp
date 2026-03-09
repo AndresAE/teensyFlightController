@@ -294,29 +294,34 @@ Common::matrix Common::getEcef2body(Common::matrix ecef2body, double latG_d, dou
   return ecef2body;
 }
 
-double Common::interpolate(Common::matrix xArray, Common::matrix yArray, double x)
+double Common::interpolate(Common::matrix xArray, Common::matrix yArray, double x, int rowIndex = 0)
 {
   if (xArray.cols < 2)
     return 0.0; // Not enough data points
 
   int ii = 0;
-  while (ii < xArray.cols - 1 && xArray.m[0][ii] < x)
+  while (ii < xArray.cols - 1 && xArray.m[rowIndex][ii] < x)
     ii++;
 
   // clamp ii to valid range
   if (ii == 0)
-    return yArray.m[0][0]; // Return first value if x is less than first x value
-  if (ii == xArray.cols - 1)
-    return yArray.m[0][xArray.cols - 1]; // Return last value if x is greater than last x value
+    return yArray.m[rowIndex][0]; // Return first value if x is less than or equal to first x value
 
-  double x0 = xArray.m[0][ii - 1];
-  double y0 = yArray.m[0][ii - 1];
-  double x1 = xArray.m[0][ii];
-  double y1 = yArray.m[0][ii];
+  double x0 = xArray.m[rowIndex][ii - 1];
+  double y0 = yArray.m[rowIndex][ii - 1];
+  double x1 = xArray.m[rowIndex][ii];
+  double y1 = yArray.m[rowIndex][ii];
 
-  if (x1 - x0 == 0.0)
-    return y0; // avoid division by zero
-  return y0 + (y1 - y0) * (x - x0) / (x1 - x0);
+  if (x <= x1)
+  {
+    if (x1 - x0 == 0.0)
+      return y0; // avoid division by zero
+    return y0 + (y1 - y0) * (x - x0) / (x1 - x0);
+  }
+  else
+  {
+    return y1; // x > x1, return last value
+  }
 }
 
 double Common::protectedDivide(double numerator, double denominator, double threshold)

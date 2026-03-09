@@ -8,7 +8,7 @@ public:
     CFG() {}
     struct fcsParams
     {
-        bool useTM_b = false;
+        bool useTM_b = true;
         int serialBaud = 57600;
         int sampleRate_Hz = 100;
         int sampleRateLo_Hz = 20;
@@ -47,23 +47,23 @@ public:
     {
         busAptGains gains = {
             {0.0, 0.0, 0.0, 0.0, 0.0},  // roll, k_p, k_i, k_f, k_antiWindup
-            {0.0, 10, 1, 0.0, 0.0},     // rollRate, k_p, k_i, k_f, k_antiWindup
+            {0.0, 1, 0.5, 0.0, 0.0},    // rollRate, k_p, k_i, k_f, k_antiWindup
             {0.0, 0.0, 0.0, 0.0, 0.0},  // pitch, k_p, k_i, k_f, k_antiWindup
-            {0.0, 1.0, 1.0, 0.0, 0.0},  // pitchRate, k_p, k_i, k_f, k_antiWindup
+            {0.0, 1.0, 0.5, 0.0, 0.0},  // pitchRate, k_p, k_i, k_f, k_antiWindup
             {-1.5, 0.0, 0.0, 0.0, 0.0}, // nz, k_p, k_i, k_f
             {0.0, 0.0, 0.0, 0.0, 0.0},  // heading,
             {5.0, 0.0, 0.0, 0.0, 0.0},  // ny, k_p, k_i, k_f, k_antiWindup
-            {0.0, 1.0, 1.0, 0.0, 0.0}}; // yawRate, k_p, k_i, k_f, k_antiWindup
+            {0.0, 1.0, 0.5, 0.0, 0.0}}; // yawRate, k_p, k_i, k_f, k_antiWindup
         bool integratorOff_b = false;
         static const int nEffector = 4;
-        double effectorLimitHi[nEffector] = {30.0, 30.0, 30.0, 1.0};
-        double effectorLimitLo[nEffector] = {-30.0, -30.0, -30.0, 0.0};
-        double effectorOffset[nEffector] = {90.0, 90.0, 90.0, 0.0};
+        double effectorLimitHi[nEffector] = {15.0, 30.0, 30.0, 1.0};
+        double effectorLimitLo[nEffector] = {-15.0, -30.0, -30.0, 0.0};
+        double effectorOffset[nEffector] = {0.0, 0.0, 0.0, 0.0};
         int effectorPins[nEffector] = {7, 8, 9, 10};
-        int muMax_us[nEffector] = {2500, 2500, 2500, 2000};        // microseconds
-        int muMin_us[nEffector] = {500, 500, 500, 1000};           // microseconds
-        double directModeGain[nEffector] = {-0.5, 0.5, 0.5, 1.25}; // scale factor from control input to effector command in direct mode
+        int muMax_us[nEffector] = {2000, 2000, 2000, 1900}; // microseconds
+        int muMin_us[nEffector] = {1000, 1000, 1000, 1100}; // microseconds
         double servoRange_d[nEffector] = {180.0, 180.0, 180.0, 1.0};
+        double directModeGain[nEffector] = {-1.5, 1.5, 1.5, 1.0};
         double mixingRatioRotational[nEffector][3] = {
             {1.0, 0.0, -0.2},  // aileron (+LTED)
             {0.0, -1.0, 0.0},  // elevator (+TED)
@@ -74,20 +74,20 @@ public:
             {0.0, 0.0, 0.0},  // elevator (+TED)
             {0.0, 0.0, 0.0},  // rudder (+TEL)
             {1.0, 0.0, 0.0}}; // throttle
-        static const int nMappingBP = 4;
+        static const int nMappingBP = 5;
         Common::matrix servoMappingBreakpoints = {
             nEffector,
             nMappingBP,
-            {{-30.0, -15.0, 0.0, 15.0, 30.0},
-             {-30.0, -15.0, 0.0, 15.0, 30.0},
-             {-30.0, -15.0, 0.0, 15.0, 30.0},
+            {{-17.5, -10.0, 0.0, 10.0, 17.5},
+             {-27.0, -12.0, 13.0, 27.0, 37.0},
+             {-37.0, -19.0, 0.0, 19.0, 37.0},
              {0.0, 0.25, 0.5, 0.75, 1.0}}};
         Common::matrix servoMappingTable = {
             nEffector,
             nMappingBP,
-            {{-30.0, -15.0, 0.0, 15.0, 30.0},
-             {-30.0, -15.0, 0.0, 15.0, 30.0},
-             {-30.0, -15.0, 0.0, 15.0, 30.0},
+            {{30.0, 60.0, 90.0, 120.0, 150.0},
+             {30.0, 60.0, 90.0, 120.0, 150.0},
+             {30.0, 60.0, 90.0, 120.0, 150.0},
              {0.0, 0.25, 0.5, 0.75, 1.0}}};
     };
     struct imuParams
@@ -135,7 +135,7 @@ public:
     struct msnParams
     {
         int takeoffDebounceLimit = 3;
-        float takeoffThreshold_fps2 = 10.0;
+        float takeoffThreshold_fps2 = 5.0;
     };
 
     fcsParams fcsParams_;
