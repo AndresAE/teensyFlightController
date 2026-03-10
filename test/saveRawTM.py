@@ -4,7 +4,7 @@ from datetime import datetime
 
 # --- packet format ---
 HEADER = b'\xAB\xCD'          # new header
-STRUCT_FORMAT = "<d bb 17d bb 11d H"
+STRUCT_FORMAT = "<d bb 9d 11d H"  # "<d bb 17d bb 11d H"
 STRUCT_SIZE = struct.calcsize(STRUCT_FORMAT)
 
 ser = serial.Serial("COM3", 57600, timeout=5)

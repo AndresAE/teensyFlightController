@@ -47,13 +47,13 @@ public:
     {
         busAptGains gains = {
             {0.0, 0.0, 0.0, 0.0, 0.0},  // roll, k_p, k_i, k_f, k_antiWindup
-            {0.0, 1, 0.5, 0.0, 0.0},    // rollRate, k_p, k_i, k_f, k_antiWindup
+            {0.0, 0.5, 0.25, 0.0, 0.0}, // rollRate, k_p, k_i, k_f, k_antiWindup
             {0.0, 0.0, 0.0, 0.0, 0.0},  // pitch, k_p, k_i, k_f, k_antiWindup
-            {0.0, 1.0, 0.5, 0.0, 0.0},  // pitchRate, k_p, k_i, k_f, k_antiWindup
+            {0.0, 0.5, 0.5, 0.0, 0.0},  // pitchRate, k_p, k_i, k_f, k_antiWindup
             {-1.5, 0.0, 0.0, 0.0, 0.0}, // nz, k_p, k_i, k_f
             {0.0, 0.0, 0.0, 0.0, 0.0},  // heading,
-            {5.0, 0.0, 0.0, 0.0, 0.0},  // ny, k_p, k_i, k_f, k_antiWindup
-            {0.0, 1.0, 0.5, 0.0, 0.0}}; // yawRate, k_p, k_i, k_f, k_antiWindup
+            {3.0, 0.0, 0.0, 0.0, 0.0},  // ny, k_p, k_i, k_f, k_antiWindup
+            {0.0, 0.5, 0.5, 0.0, 0.0}}; // yawRate, k_p, k_i, k_f, k_antiWindup
         bool integratorOff_b = false;
         static const int nEffector = 4;
         double effectorLimitHi[nEffector] = {15.0, 30.0, 30.0, 1.0};
@@ -69,7 +69,7 @@ public:
             {0.0, -1.0, 0.0},  // elevator (+TED)
             {-0.2, 0.0, -1.0}, // rudder (+TEL)
             {0.0, 0.0, 0.0}};  // throttle
-        double mixingRatioLinear[nEffector][3] = {
+        double mixingRatioTranslational[nEffector][3] = {
             {0.0, 0.0, 0.0},  // aileron (+LTED)
             {0.0, 0.0, 0.0},  // elevator (+TED)
             {0.0, 0.0, 0.0},  // rudder (+TEL)

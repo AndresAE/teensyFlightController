@@ -20,7 +20,7 @@ public:
   double dt_s;
   double integralError = 0.0;
   double rotationalPseudoEffector[3];
-  double linearPseudoEffector[3];
+  double translationalPseudoEffector[3];
 
   // public methods
   void begin();
@@ -105,7 +105,7 @@ private:
   double _yawEffectorCmdAlt = 0;
   int _nEffectors;
   int _nRotationalAxes = 3;
-  int _nLinearAxes = 3;
+  int _nTranslationalAxes = 3;
   int _frame_us = 20000;
   int _loopTime_us;
   int _pulse_us;

@@ -291,9 +291,9 @@ void APT::controlAllocation()
   rotationalPseudoEffector[1] = m_APT.pitchEffectorCmd;
   rotationalPseudoEffector[2] = m_APT.yawEffectorCmd;
 
-  linearPseudoEffector[0] = m_APT.axialEffectorCmd;
-  linearPseudoEffector[1] = m_APT.lateralEffectorCmd;
-  linearPseudoEffector[2] = m_APT.normalEffectorCmd;
+  translationalPseudoEffector[0] = m_APT.axialEffectorCmd;
+  translationalPseudoEffector[1] = m_APT.lateralEffectorCmd;
+  translationalPseudoEffector[2] = m_APT.normalEffectorCmd;
 
   // reset effector commands
   for (int ii = 0; ii < _nEffectors; ii++)
@@ -311,9 +311,9 @@ void APT::controlAllocation()
 
   for (int ii = 0; ii < _nEffectors; ii++)
   {
-    for (int jj = 0; jj < _nLinearAxes; jj++)
+    for (int jj = 0; jj < _nTranslationalAxes; jj++)
     {
-      m_APT.effectorCmd[ii] += aptParams.mixingRatioLinear[ii][jj] * linearPseudoEffector[jj];
+      m_APT.effectorCmd[ii] += aptParams.mixingRatioTranslational[ii][jj] * translationalPseudoEffector[jj];
     }
   }
 }

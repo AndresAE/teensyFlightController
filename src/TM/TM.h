@@ -74,7 +74,6 @@ struct __attribute__((packed)) busTM
     struct busTimeTM timeTM;
     struct busMsnTM msnTM;
     struct busImuTM imuTM;
-    struct busGpsTM gpsTM;
     struct busGdcTM gdcTM;
     struct busAptTM aptTM;
     uint16_t crc;
