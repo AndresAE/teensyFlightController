@@ -12,13 +12,13 @@ def first_ge_index(t, threshold):
 # -----------------------------
 # User settings
 # -----------------------------
-filename = "tm/data/telemetry_log_raw_20260309_174627.txt"   # your file
+filename = "tm/data/telemetry_log_raw_20260312_165735.txt"   # your file
 value_index = 5  # Nz
-value_index = 7  # q
-value_index = 30  # de
-value_index = 29  # da
-value_index = 27  # pitchInt
-value_index = 26  # rollInt
+# value_index = 7  # q
+# value_index = 30  # de
+# value_index = 29  # da
+# value_index = 27  # pitchInt
+# value_index = 26  # rollInt
 # -----------------------------
 
 times = []

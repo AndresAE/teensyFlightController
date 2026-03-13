@@ -3,6 +3,7 @@ import threading
 import queue
 import time
 import struct
+import traceback
 from collections import deque
 import numpy as np
 import pyqtgraph as pg
@@ -13,7 +14,7 @@ from pyqtgraph.Qt import QtCore, QtWidgets
 # SERIAL STREAM
 # ============================================================
 
-def open_serial(port="COM3", baud=57600):
+def open_serial(port="COM5", baud=57600):
     ser = serial.Serial(port, baud, timeout=0)
     return ser
 
@@ -23,7 +24,7 @@ def open_serial(port="COM3", baud=57600):
 # ============================================================
 
 HEADER = b'\xAB\xCD'
-STRUCT_FORMAT = "<d bb 17d bb 11d H"
+STRUCT_FORMAT = "<d bb 9d 11d H"  # "<d bb 17d bb 11d H"
 STRUCT_SIZE = struct.calcsize(STRUCT_FORMAT)
 
 
@@ -107,29 +108,37 @@ history = {
     "roll": deque(maxlen=MAX_POINTS),
     "pitch": deque(maxlen=MAX_POINTS),
     "yaw": deque(maxlen=MAX_POINTS),
-    "pb": deque(maxlen=MAX_POINTS),
-    "ny": deque(maxlen=MAX_POINTS),
-    "nz": deque(maxlen=MAX_POINTS),
-    "throttle": deque(maxlen=MAX_POINTS),
     "gx": deque(maxlen=MAX_POINTS),
     "gy": deque(maxlen=MAX_POINTS),
     "gz": deque(maxlen=MAX_POINTS),
-    "alt": deque(maxlen=MAX_POINTS),
-    "lat": deque(maxlen=MAX_POINTS),
-    "lon": deque(maxlen=MAX_POINTS),
+    "eff0": deque(maxlen=MAX_POINTS),
+    "eff1": deque(maxlen=MAX_POINTS),
+    "eff2": deque(maxlen=MAX_POINTS),
+    "eff3": deque(maxlen=MAX_POINTS),
 }
 
 
 def append_packet(timestamp, pkt):
-    # Unpack according to busTM structure
-    # pkt: met_s, stp_ms, phs, ax_fps2, ay_fps2, az_fps2, gx_dps, gy_dps, gz_dps, roll_d, pitch_d, yaw_d,
-    # timeStamp_s, latG_d, lon_d, HAE_ft, vECEF_X_fps, vECEF_Y_fps, vECEF_Z_fps, hdop, fixQual, nSatellites,
-    # pbC_dps, nyC_B_fps2, nzC_B_fps2, pwrCmd_pct,
-    # rollIntegralError, pitchIntegralError, yawIntegralError, effectorCmd0, effectorCmd1, effectorCmd2, effectorCmd3, crc
-    (met_s, stp_ms, phs, ax_fps2, ay_fps2, az_fps2, gx_dps, gy_dps, gz_dps, roll_d, pitch_d, yaw_d,
-     timeStamp_s, latG_d, lon_d, HAE_ft, vECEF_X_fps, vECEF_Y_fps, vECEF_Z_fps, hdop, fixQual, nSatellites,
-     pbC_dps, nyC_B_fps2, nzC_B_fps2, pwrCmd_pct,
-     rollIntegralError, pitchIntegralError, yawIntegralError, effectorCmd0, effectorCmd1, effectorCmd2, effectorCmd3, crc) = pkt
+    # Unpack according to STRUCT_FORMAT: "<d bb 9d 11d H"
+    # pkt: met_s, stp_ms, phs, ax, ay, az, gx, gy, gz, roll, pitch, yaw, [11 unused], crc
+    met_s = pkt[0]
+    stp_ms = pkt[1]
+    phs = pkt[2]
+    ax_fps2 = pkt[3]
+    ay_fps2 = pkt[4]
+    az_fps2 = pkt[5]
+    gx_dps = pkt[6]
+    gy_dps = pkt[7]
+    gz_dps = pkt[8]
+    roll_d = pkt[9]
+    pitch_d = pkt[10]
+    yaw_d = pkt[11]
+    eff0 = pkt[19]
+    eff1 = pkt[20]
+    eff2 = pkt[21]
+    eff3 = pkt[22]
+    # pkt[12:23] are the 11 unused doubles
+    # pkt[23] is the CRC
 
     history["t"].append(timestamp)
     history["ax"].append(ax_fps2)
@@ -141,18 +150,15 @@ def append_packet(timestamp, pkt):
     history["roll"].append(roll_d)
     history["pitch"].append(pitch_d)
     history["yaw"].append(yaw_d)
-    history["pb"].append(pbC_dps)
-    history["ny"].append(nyC_B_fps2)
-    history["nz"].append(nzC_B_fps2)
-    history["throttle"].append(pwrCmd_pct)
-    history["lat"].append(latG_d)
-    history["lon"].append(lon_d)
-    history["alt"].append(HAE_ft)
-
+    history["eff0"].append(eff0)
+    history["eff1"].append(eff1)
+    history["eff2"].append(eff2)
+    history["eff3"].append(eff3)
 
 # ============================================================
 # REAL-TIME PLOT SETUP
 # ============================================================
+
 
 app = QtWidgets.QApplication([])
 win = pg.GraphicsLayoutWidget(show=True, title="Telemetry")
@@ -162,14 +168,14 @@ win.resize(1100, 900)
 ax_euler = win.addPlot(row=0, col=0, title="Euler Angles (deg)")
 ax_euler.showGrid(x=True, y=True)
 ax_euler.addLegend()
-euler_colors = ("m", "y", "c")
+euler_colors = ("r", "g", "b")
 euler_lines = [ax_euler.plot(pen=pg.mkPen(color=c, width=1), name=l)
                for l, c in zip(("roll", "pitch", "yaw"), euler_colors)]
 
 ax_gyro = win.addPlot(row=1, col=0, title="Gyros (deg/s)")
 ax_gyro.showGrid(x=True, y=True)
 ax_gyro.addLegend()
-gyro_colors = ("#1f77b4", "#ff7f0e", "#2ca02c")
+gyro_colors = ("r", "g", "b")
 gyro_lines = [ax_gyro.plot(pen=pg.mkPen(color=c, width=1), name=l)
               for l, c in zip(("gx", "gy", "gz"), gyro_colors)]
 
@@ -180,25 +186,32 @@ accel_colors = ("r", "g", "b")
 accel_lines = [ax_accel.plot(pen=pg.mkPen(color=c, width=1), name=l)
                for l, c in zip(("ax", "ay", "az"), accel_colors)]
 
-# Right column: GPS lat/lon/alt (strip charts) and GDC commands
-ax_lat = win.addPlot(row=0, col=1, title="Latitude (deg)")
-ax_lat.showGrid(x=True, y=True)
-lat_line = ax_lat.plot(pen=pg.mkPen(color="#003f5c", width=1), name="lat")
+ax_eff = win.addPlot(row=3, col=0, title="Effectors ([])")
+ax_eff.showGrid(x=True, y=True)
+ax_eff.addLegend()
+eff_colors = ("r", "g", "b", "m")
+eff_lines = [ax_eff.plot(pen=pg.mkPen(color=c, width=1), name=l)
+             for l, c in zip(("eff0", "eff1", "eff2", "eff3"), eff_colors)]
 
-ax_lon = win.addPlot(row=1, col=1, title="Longitude (deg)")
-ax_lon.showGrid(x=True, y=True)
-lon_line = ax_lon.plot(pen=pg.mkPen(color="#2f4b7c", width=1), name="lon")
+# # Right column: GPS lat/lon/alt (strip charts) and GDC commands
+# ax_lat = win.addPlot(row=0, col=1, title="Latitude (deg)")
+# ax_lat.showGrid(x=True, y=True)
+# lat_line = ax_lat.plot(pen=pg.mkPen(color="#003f5c", width=1), name="lat")
 
-ax_alt = win.addPlot(row=2, col=1, title="Altitude (ft)")
-ax_alt.showGrid(x=True, y=True)
-alt_line = ax_alt.plot(pen=pg.mkPen(color="#665191", width=1), name="alt")
+# ax_lon = win.addPlot(row=1, col=1, title="Longitude (deg)")
+# ax_lon.showGrid(x=True, y=True)
+# lon_line = ax_lon.plot(pen=pg.mkPen(color="#2f4b7c", width=1), name="lon")
 
-ax_gdc = win.addPlot(row=3, col=1, title="GDC Commands")
-ax_gdc.showGrid(x=True, y=True)
-ax_gdc.addLegend()
-gdc_colors = ("#d62728", "#ff7f0e", "#2ca02c", "#9467bd")
-gdc_lines = [ax_gdc.plot(pen=pg.mkPen(color=c, width=1), name=l) for l, c in zip(
-    ("pbCmd_dps", "nyCmd", "nzCmd", "throttle"), gdc_colors)]
+# ax_alt = win.addPlot(row=2, col=1, title="Altitude (ft)")
+# ax_alt.showGrid(x=True, y=True)
+# alt_line = ax_alt.plot(pen=pg.mkPen(color="#665191", width=1), name="alt")
+
+# ax_gdc = win.addPlot(row=3, col=1, title="GDC Commands")
+# ax_gdc.showGrid(x=True, y=True)
+# ax_gdc.addLegend()
+# gdc_colors = ("#d62728", "#ff7f0e", "#2ca02c", "#9467bd")
+# gdc_lines = [ax_gdc.plot(pen=pg.mkPen(color=c, width=1), name=l) for l, c in zip(
+#     ("pbCmd_dps", "nyCmd", "nzCmd", "throttle"), gdc_colors)]
 
 frame_count = 0
 Y_RECALC_PERIOD = 10  # recalc y-limits every N frames
@@ -225,7 +238,8 @@ def update():
             now = time.time()
             t0 = now - TIME_WINDOW_S
             # set x-range on all axes so the UI keeps moving even with no data
-            for axp in (ax_accel, ax_gyro, ax_euler, ax_gdc, ax_lat, ax_lon, ax_alt):
+            # , ax_gdc, ax_lat, ax_lon, ax_alt):
+            for axp in (ax_accel, ax_gyro, ax_euler, ax_eff):
                 axp.setXRange(t0, now, padding=0)
             # diagnostic queue size occasionally
             if frame_count % 200 == 0:
@@ -262,25 +276,34 @@ def update():
             line.setData(t, vals)
         ax_euler.setXRange(max(t[0], t0), t[-1], padding=0)
 
-        # GDC commands
-        pb = np.array(history["pb"])
-        ny = np.array(history["ny"])
-        nz = np.array(history["nz"])
-        throttle = np.array(history["throttle"])
-        for line, vals in zip(gdc_lines, (pb, ny, nz, throttle)):
+        # eff
+        eff0_ = np.array(history["eff0"])
+        eff1_ = np.array(history["eff1"])
+        eff2_ = np.array(history["eff2"])
+        eff3_ = np.array(history["eff3"])
+        for line, vals in zip(eff_lines, (eff0_, eff1_, eff2_, eff3_)):
             line.setData(t, vals)
-        ax_gdc.setXRange(max(t[0], t0), t[-1], padding=0)
+        ax_eff.setXRange(max(t[0], t0), t[-1], padding=0)
 
-        # GPS lat/lon/alt as strip charts
-        lat = np.array(history["lat"])
-        lon = np.array(history["lon"])
-        alt = np.array(history["alt"])
-        lat_line.setData(t, lat)
-        lon_line.setData(t, lon)
-        alt_line.setData(t, alt)
-        ax_lat.setXRange(max(t[0], t0), t[-1], padding=0)
-        ax_lon.setXRange(max(t[0], t0), t[-1], padding=0)
-        ax_alt.setXRange(max(t[0], t0), t[-1], padding=0)
+        # # GDC commands
+        # pb = np.array(history["pb"])
+        # ny = np.array(history["ny"])
+        # nz = np.array(history["nz"])
+        # throttle = np.array(history["throttle"])
+        # for line, vals in zip(gdc_lines, (pb, ny, nz, throttle)):
+        #     line.setData(t, vals)
+        # ax_gdc.setXRange(max(t[0], t0), t[-1], padding=0)
+
+        # # GPS lat/lon/alt as strip charts
+        # lat = np.array(history["lat"])
+        # lon = np.array(history["lon"])
+        # alt = np.array(history["alt"])
+        # lat_line.setData(t, lat)
+        # lon_line.setData(t, lon)
+        # alt_line.setData(t, alt)
+        # ax_lat.setXRange(max(t[0], t0), t[-1], padding=0)
+        # ax_lon.setXRange(max(t[0], t0), t[-1], padding=0)
+        # ax_alt.setXRange(max(t[0], t0), t[-1], padding=0)
 
         # recalc y-limits periodically for all multi-line axes
         if frame_count % Y_RECALC_PERIOD == 0:
@@ -288,10 +311,11 @@ def update():
                 (ax_accel, (ax_vals, ay_vals, az_vals)),
                 (ax_gyro, (gx, gy, gz)),
                 (ax_euler, (roll, pitch, yaw)),
-                (ax_gdc, (pb, ny, nz, throttle)),
-                (ax_lat, (lat,)),
-                (ax_lon, (lon,)),
-                (ax_alt, (alt,)),
+                (ax_eff, (eff0_, eff1_, eff2_, eff3_)),
+                # (ax_gdc, (pb, ny, nz, throttle)),
+                # (ax_lat, (lat,)),
+                # (ax_lon, (lon,)),
+                # (ax_alt, (alt,)),
             ]
             for axp, arrays in axes_and_arrays:
                 try:
@@ -331,7 +355,7 @@ def update():
 
 # start background serial reader thread (reads serial and enqueues packets)
 serial_thread = threading.Thread(target=serial_reader_thread, args=(
-    "COM3", 57600, packet_queue, serial_stop_event), daemon=True)
+    "COM5", 57600, packet_queue, serial_stop_event), daemon=True)
 serial_thread.start()
 
 # ensure background thread stops when the Qt app exits

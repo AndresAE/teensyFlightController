@@ -103,6 +103,7 @@ private:
   double _rollEffectorCmdAlt = 0;
   double _pitchEffectorCmdAlt = 0;
   double _yawEffectorCmdAlt = 0;
+  double _servoCmd[CFG::aptParams::nEffector];
   int _nEffectors;
   int _nRotationalAxes = 3;
   int _nTranslationalAxes = 3;

@@ -355,7 +355,7 @@ void APT::setupEffectors()
   {
     // attach servo to pin and initialize to offset position
     _servos[ii].attach(aptParams.effectorPins[ii]);
-    _init_us = static_cast<int>((m_APT.effectorCmd[ii] / aptParams.servoRange_d[ii]) *
+    _init_us = static_cast<int>((_servoCmd[ii] / aptParams.servoRange_d[ii]) *
                                     (aptParams.muMax_us[ii] - aptParams.muMin_us[ii]) +
                                 aptParams.muMin_us[ii]);
     _servos[ii].writeMicroseconds(_init_us);
@@ -367,7 +367,7 @@ void APT::setEffectors()
   // Compute pulse widths (microseconds) and write to servos (non-blocking)
   for (int ii = 0; ii < _nEffectors; ii++)
   {
-    _pulse_us = static_cast<int>((m_APT.effectorCmd[ii] / aptParams.servoRange_d[ii]) *
+    _pulse_us = static_cast<int>((_servoCmd[ii] / aptParams.servoRange_d[ii]) *
                                      (aptParams.muMax_us[ii] - aptParams.muMin_us[ii]) +
                                  aptParams.muMin_us[ii]);
     _servos[ii].writeMicroseconds(_pulse_us);
@@ -383,6 +383,6 @@ void APT::mapServos()
 {
   for (int ii = 0; ii < _nEffectors; ii++)
   {
-    m_APT.effectorCmd[ii] = C.interpolate(aptParams.servoMappingBreakpoints, aptParams.servoMappingTable, m_APT.effectorCmd[ii], ii);
+    _servoCmd[ii] = C.interpolate(aptParams.servoMappingBreakpoints, aptParams.servoMappingTable, m_APT.effectorCmd[ii], ii);
   }
 }
