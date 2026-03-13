@@ -95,7 +95,7 @@ void loop()
       }
       else
       {
-        printStatus(serialPort, now_ms, endTime_ms, tst, msn, imu, gps, nav, gdc, apt);
+        printStatusRaw(serialPort, now_ms, endTime_ms, tst, msn, imu, gps, nav, gdc, apt);
       }
       nextSlowTask_ms += dtSlow_ms;
     }
