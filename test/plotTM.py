@@ -355,7 +355,7 @@ def update():
 
 # start background serial reader thread (reads serial and enqueues packets)
 serial_thread = threading.Thread(target=serial_reader_thread, args=(
-    "COM5", 57600, packet_queue, serial_stop_event), daemon=True)
+    "COM3", 57600, packet_queue, serial_stop_event), daemon=True)
 serial_thread.start()
 
 # ensure background thread stops when the Qt app exits

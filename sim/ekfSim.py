@@ -132,7 +132,7 @@ for ii in range(nSteps):
 
     # update every 0.1 s
     # if ii % 10 == 0:
-    vGPS = filteredDerivative(xGPS, xGPSprev, 0.01, 1, vGPS)
+    vGPS = filteredDerivative(xGPS, xGPSprev, dt_s, 10, vGPS)
     xGPSprev = xGPS
     z = np.concatenate([xGPS, vGPS])
     y = z - H @ x
@@ -179,13 +179,13 @@ for ii in range(nSteps):
 # plt.grid(True)
 # plt.show()
 
-# plt.figure()
-# plt.plot(t_s, out_xRec[:, 4])
-# plt.plot(t_s, out_vRec_E_fps[:, 1])
-# plt.xlabel('time [s]')
-# plt.ylabel('vy [fps]')
-# plt.grid(True)
-# plt.show()
+plt.figure()
+plt.plot(t_s, out_xRec[:, 4])
+plt.plot(t_s, out_vRec_E_fps[:, 1])
+plt.xlabel('time [s]')
+plt.ylabel('vy [fps]')
+plt.grid(True)
+plt.show()
 
 # plt.figure()
 # plt.plot(t_s, out_xRec[:, 5])

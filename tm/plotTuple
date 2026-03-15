@@ -12,13 +12,18 @@ def first_ge_index(t, threshold):
 # -----------------------------
 # User settings
 # -----------------------------
-filename = "tm/data/telemetry_log_raw_20260312_165735.txt"   # your file
-value_index = 5  # Nz
+filename = "tm/data/telemetry_log_raw_20260315_140107.txt"   # your file
+filename = "tm/data/telemetry_log_raw_20260315_140308.txt"   # your file
+# value_index = 2  # mode
+# value_index = 5  # Nz
 # value_index = 7  # q
-# value_index = 30  # de
-# value_index = 29  # da
-# value_index = 27  # pitchInt
-# value_index = 26  # rollInt
+# value_index = 20  # de
+# value_index = 14  # nzC
+
+# value_index = 4  # Nz
+# value_index = 21  # de
+value_index = 12  # rollRateC
+value_index = 6  # rollRate
 # -----------------------------
 
 times = []
@@ -44,8 +49,11 @@ with open(filename, "r") as f:
         times.append(t)
         values.append(v)
 
-idx = 0  # first_ge_index(times, 47.5)
-idxEnd = -1  # first_ge_index(times, 50.58)
+# idx = first_ge_index(times, 33.73)
+# idxEnd = first_ge_index(times, 37.8)
+
+idx = first_ge_index(times, 33.8)
+idxEnd = -1  # first_ge_index(times, 49.5)
 
 # -----------------------------
 # Plot

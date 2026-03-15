@@ -27,7 +27,6 @@
 - [x] initialize APT params based on effector size
 - [x] initialize GDC cpp params based on input size
 - [x] kalman filter for bad intermittent GPS
-- [ ] time of validity for IMU, GPS, GDC commands
 - [x] 'Direct' law for GDC commands
 - [ ] consistent matrix naming in common
 - [ ] check transformation math NAV
@@ -47,3 +46,5 @@
 - [x] rename Config->CFG
 - [x] interpolation mapping
 - [ ] test defelctions
+- [ ] quaternion attitude propagation (variant)
+- [ ] higher order low pass filter

@@ -8,7 +8,7 @@ public:
     CFG() {}
     struct fcsParams
     {
-        bool useTM_b = false;
+        bool useTM_b = true;
         int serialBaud = 57600;
         int sampleRate_Hz = 100;
         int sampleRateLo_Hz = 100;
@@ -47,13 +47,13 @@ public:
     {
         busAptGains gains = {
             {0.0, 0.0, 0.0, 0.0, 0.0},  // roll, k_p, k_i, k_f, k_antiWindup
-            {0.0, 1, 0.25, 0.0, 0.0},   // rollRate, k_p, k_i, k_f, k_antiWindup
+            {0.0, 2, 0.25, 0.0, 0.0},   // rollRate, k_p, k_i, k_f, k_antiWindup
             {0.0, 0.0, 0.0, 0.0, 0.0},  // pitch, k_p, k_i, k_f, k_antiWindup
-            {0.0, 1, 0.5, 0.0, 0.0},    // pitchRate, k_p, k_i, k_f, k_antiWindup
+            {0.0, 2, 0.25, 0.0, 0.0},   // pitchRate, k_p, k_i, k_f, k_antiWindup
             {-1.5, 0.0, 0.0, 0.0, 0.0}, // nz, k_p, k_i, k_f
             {0.0, 0.0, 0.0, 0.0, 0.0},  // heading,
-            {2.0, 0.0, 0.0, 0.0, 0.0},  // ny, k_p, k_i, k_f, k_antiWindup
-            {0.0, 1, 0.5, 0.0, 0.0}};   // yawRate, k_p, k_i, k_f, k_antiWindup
+            {5, 0.0, 0.0, 0.0, 0.0},    // ny, k_p, k_i, k_f, k_antiWindup
+            {0.0, 2, 0.5, 0.0, 0.0}};   // yawRate, k_p, k_i, k_f, k_antiWindup
         bool integratorOff_b = false;
         static const int nEffector = 4;
         double effectorLimitHi[nEffector] = {15.0, 30.0, 30.0, 1.0};
@@ -100,12 +100,12 @@ public:
         double xRot_d = 180.0;
         double yRot_d = 0.0;
         double zRot_d = -90.0;
-        double cutoffAx_Hz = 2.0;
-        double cutoffAy_Hz = 2.0;
-        double cutoffAz_Hz = 2.0;
-        double cutoffGx_Hz = 1.0;
-        double cutoffGy_Hz = 1.0;
-        double cutoffGz_Hz = 1.0;
+        double cutoffAx_Hz = 5.0;
+        double cutoffAy_Hz = 5.0;
+        double cutoffAz_Hz = 5.0;
+        double cutoffGx_Hz = 5.0;
+        double cutoffGy_Hz = 5.0;
+        double cutoffGz_Hz = 5.0;
     };
     struct gpsParams
     {

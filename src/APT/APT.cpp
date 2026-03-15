@@ -119,29 +119,27 @@ void APT::rollMiddleLoop()
 
 void APT::rollInnerLoop()
 {
-  if (_resetRollIntegral_b)
+  _rollError = m_APT.pbCmd_dps - m_IMU_obj.m_IMU.states.angularRateX_dps;
+  if (aptParams.integratorOff_b)
+  {
+    _rollIntegralError = m_APT.pbCmd_dps;
+  }
+  else if (_resetRollIntegral_b)
   {
     _rollIntegralError = 0.0;
   }
-  if (aptParams.integratorOff_b)
+  else if (m_APT.effectorOnLimit_b[0] && (C.sign(_rollEffectorCmdPrev) == C.sign(_rollError)))
   {
-    _xiRoll = m_APT.pbCmd_dps;
+    _rollIntegralError = (_rollEffectorCmdPrev / aptParams.gains.rollRate.K_d + m_IMU_obj.m_IMU.states.angularRateX_dps) / aptParams.gains.rollRate.K_i;
   }
   else
   {
-    _rollError = m_APT.pbCmd_dps - m_IMU_obj.m_IMU.states.angularRateX_dps;
-    if (m_APT.effectorOnLimit_b[0] && (C.sign(_rollEffectorCmdPrev) == C.sign(_rollError)))
-    {
-      _rollIntegralError = (_rollEffectorCmdPrev / aptParams.gains.rollRate.K_d + m_IMU_obj.m_IMU.states.angularRateX_dps) / aptParams.gains.rollRate.K_i;
-    }
-    else
-    {
-      _rollIntegralError = C.tustinIntegral(_rollError, _rollErrorPrev, _rollIntegralError, dt_s);
-    }
-    _rollErrorPrev = _rollError;
-    _xiRoll = _rollIntegralError * aptParams.gains.rollRate.K_i;
+    _rollIntegralError = C.tustinIntegral(_rollError, _rollErrorPrev, _rollIntegralError, dt_s);
   }
+  _rollErrorPrev = _rollError;
+  _xiRoll = _rollIntegralError * aptParams.gains.rollRate.K_i;
   m_APT.rollIntegralError = _rollIntegralError;
+
   m_APT.rollEffectorCmd = proportionalControl(aptParams.gains.rollRate.K_d, _xiRoll, m_IMU_obj.m_IMU.states.angularRateX_dps);
   _rollEffectorCmdPrev = m_APT.rollEffectorCmd;
 }
@@ -185,29 +183,27 @@ void APT::pitchMiddleLoop()
 
 void APT::pitchInnerLoop()
 {
-  if (_resetPitchIntegral_b)
+  _pitchError = m_APT.qbCmd_dps - m_IMU_obj.m_IMU.states.angularRateY_dps;
+  if (aptParams.integratorOff_b)
+  {
+    _pitchIntegralError = m_APT.qbCmd_dps;
+  }
+  else if (_resetPitchIntegral_b)
   {
     _pitchIntegralError = 0.0;
   }
-  if (aptParams.integratorOff_b)
+  else if (m_APT.effectorOnLimit_b[1] && (C.sign(_pitchEffectorCmdPrev) == C.sign(_pitchError)))
   {
-    _xiPitch = m_APT.qbCmd_dps;
+    _pitchIntegralError = (_pitchEffectorCmdPrev / aptParams.gains.pitchRate.K_d + m_IMU_obj.m_IMU.states.angularRateY_dps) / aptParams.gains.pitchRate.K_i;
   }
   else
   {
-    _pitchError = m_APT.qbCmd_dps - m_IMU_obj.m_IMU.states.angularRateY_dps;
-    if (m_APT.effectorOnLimit_b[1] && (C.sign(_pitchEffectorCmdPrev) == C.sign(_pitchError)))
-    {
-      _pitchIntegralError = (_pitchEffectorCmdPrev / aptParams.gains.pitchRate.K_d + m_IMU_obj.m_IMU.states.angularRateY_dps) / aptParams.gains.pitchRate.K_i;
-    }
-    else
-    {
-      _pitchIntegralError = C.tustinIntegral(_pitchError, _pitchErrorPrev, _pitchIntegralError, dt_s);
-    }
-    _pitchErrorPrev = _pitchError;
-    _xiPitch = _pitchIntegralError * aptParams.gains.pitchRate.K_i;
+    _pitchIntegralError = C.tustinIntegral(_pitchError, _pitchErrorPrev, _pitchIntegralError, dt_s);
   }
+  _pitchErrorPrev = _pitchError;
+  _xiPitch = _pitchIntegralError * aptParams.gains.pitchRate.K_i;
   m_APT.pitchIntegralError = _pitchIntegralError;
+
   m_APT.pitchEffectorCmd = proportionalControl(aptParams.gains.pitchRate.K_d, _xiPitch, m_IMU_obj.m_IMU.states.angularRateY_dps);
   _pitchEffectorCmdPrev = m_APT.pitchEffectorCmd;
 }
@@ -247,29 +243,27 @@ void APT::yawMiddleLoop()
 
 void APT::yawInnerLoop()
 {
-  if (_resetYawIntegral_b)
+  _yawError = m_APT.rbCmd_dps - m_IMU_obj.m_IMU.states.angularRateZ_dps;
+  if (aptParams.integratorOff_b)
+  {
+    _yawIntegralError = _yawError;
+  }
+  else if (_resetYawIntegral_b)
   {
     _yawIntegralError = 0.0;
   }
-  if (aptParams.integratorOff_b)
+  else if (m_APT.effectorOnLimit_b[2] && (C.sign(_yawEffectorCmdPrev) == C.sign(_yawError)))
   {
-    _xiYaw = m_APT.rbCmd_dps;
+    _yawIntegralError = (_yawEffectorCmdPrev / aptParams.gains.yawRate.K_d + m_IMU_obj.m_IMU.states.angularRateZ_dps) / aptParams.gains.yawRate.K_i;
   }
   else
   {
-    _yawError = m_APT.rbCmd_dps - m_IMU_obj.m_IMU.states.angularRateZ_dps;
-    if (m_APT.effectorOnLimit_b[2] && (C.sign(_yawEffectorCmdPrev) == C.sign(_yawError)))
-    {
-      _yawIntegralError = (_yawEffectorCmdPrev / aptParams.gains.yawRate.K_d + m_IMU_obj.m_IMU.states.angularRateZ_dps) / aptParams.gains.yawRate.K_i;
-    }
-    else
-    {
-      _yawIntegralError = C.tustinIntegral(_yawError, _yawErrorPrev, _yawIntegralError, dt_s);
-    }
-    _yawErrorPrev = _yawError;
-    _xiYaw = _yawIntegralError * aptParams.gains.yawRate.K_i;
+    _yawIntegralError = C.tustinIntegral(_yawError, _yawErrorPrev, _yawIntegralError, dt_s);
   }
+  _yawErrorPrev = _yawError;
+  _xiYaw = _yawIntegralError * aptParams.gains.yawRate.K_i;
   m_APT.yawIntegralError = _yawIntegralError;
+
   m_APT.yawEffectorCmd = proportionalControl(aptParams.gains.yawRate.K_d, _xiYaw, m_IMU_obj.m_IMU.states.angularRateZ_dps);
   _yawEffectorCmdPrev = m_APT.yawEffectorCmd;
 }
