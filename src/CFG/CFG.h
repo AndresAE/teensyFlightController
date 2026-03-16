@@ -35,22 +35,24 @@ public:
     };
     struct tstParams
     {
-        int controlInPins[5] = {2, 3, 4, 5, 6}; // roll, pitch, yaw, throttle
-        int controlInTimeOut_us = 25000;        // 25 ms timeout
-        double pwmOffset_us[5] = {1500.0, 1770, 1500.0, 1100, 0};
-        double k_pwm[5] = {-0.15, 0.12, -0.02, 0.00125, 1}; // scale factor from pwm to control input
-        double controlInHiLimit[5] = {60, 16.0, 8.0, 1.0, 2000.0};
-        double controlInLoLimit[5] = {-60.0, -80.0, -8.0, 0.0, 1000.0};
+        int controlInPins[5] = {2, 3, 4, 5, 6};        // roll, pitch, yaw, throttle
+        int controlInTimeOut_us = 25000;               // 25 ms timeout
+        int muMax_us[5] = {1900, 1900, 2000, 1900, 2}; // microseconds
+        int muMin_us[5] = {1100, 1100, 1000, 1100, 0}; // microseconds
+        double cmdOffset[5] = {0.0, -32.174, 0.0, 0.5, 1.0};
+        double kCmd[5] = {-60.0, 32.174, -8.0, 0.5, 1.0}; // scale factor from pwm to control input
+        double controlInHiLimit[5] = {60, 0.0, 8.0, 1.0, 2000.0};
+        double controlInLoLimit[5] = {-60.0, -65, -8.0, 0.0, 1000.0};
         int directModeThreshold_us = 1700;
     };
     struct aptParams
     {
         busAptGains gains = {
             {0.0, 0.0, 0.0, 0.0, 0.0},  // roll, k_p, k_i, k_f, k_antiWindup
-            {0.0, 2, 0.25, 0.0, 0.0},   // rollRate, k_p, k_i, k_f, k_antiWindup
+            {0.0, 2, 0.5, 0.0, 0.0},    // rollRate, k_p, k_i, k_f, k_antiWindup
             {0.0, 0.0, 0.0, 0.0, 0.0},  // pitch, k_p, k_i, k_f, k_antiWindup
-            {0.0, 2, 0.25, 0.0, 0.0},   // pitchRate, k_p, k_i, k_f, k_antiWindup
-            {-1.5, 0.0, 0.0, 0.0, 0.0}, // nz, k_p, k_i, k_f
+            {0.0, 2, 0.5, 0.0, 0.0},    // pitchRate, k_p, k_i, k_f, k_antiWindup
+            {-2.0, 0.0, 0.0, 0.0, 0.0}, // nz, k_p, k_i, k_f
             {0.0, 0.0, 0.0, 0.0, 0.0},  // heading,
             {5, 0.0, 0.0, 0.0, 0.0},    // ny, k_p, k_i, k_f, k_antiWindup
             {0.0, 2, 0.5, 0.0, 0.0}};   // yawRate, k_p, k_i, k_f, k_antiWindup

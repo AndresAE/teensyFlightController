@@ -111,7 +111,7 @@ void TST::processControlInputs()
   for (int ii = 0; ii < _nChannels; ii++)
   {
     // scale pwm to control input raw value
-    m_TST.controlInRaw[ii] = tstParams.k_pwm[ii] * (static_cast<double>(m_TST.controlIn_us[ii]) - tstParams.pwmOffset_us[ii]);
+    m_TST.controlInRaw[ii] = (2 * (static_cast<double>(m_TST.controlIn_us[ii]) - tstParams.muMin_us[ii]) / (tstParams.muMax_us[ii] - tstParams.muMin_us[ii]) - 1) * tstParams.kCmd[ii] + tstParams.cmdOffset[ii];
 
     // apply limits
     if (m_TST.controlInRaw[ii] > tstParams.controlInHiLimit[ii])
