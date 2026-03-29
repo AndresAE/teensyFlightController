@@ -8,6 +8,10 @@ class common:
         self.g_ftps2 = 32.174  # gravitational acceleration in ft/s^2
         self.ft2in = 12  # foot to inch
         self.in2ft = 1/12  # inch to foot
+        self.ft2m = 1/3.28084  # ft to meter
+        self.m2ft = 3.28084  # meter to foot
+        self.slug2kg = 14.593902937  # slug to kilogram
+        self.kg2slug = 0.0685217659  # kilogram to slug
 
     def ecef2bodyTransformation(self, lla_ddft, euler_d):
         # Placeholder for ECEF to body frame conversion

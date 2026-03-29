@@ -30,9 +30,9 @@ class controller():
         ki_r = 2
 
         pitchLimit = 30
-        ka_nz = -1.5
+        ka_nz = -2.0
         kd_q = 0.5  # 1.58
-        ki_q = 1
+        ki_q = 5
 
         mixing = np.array([[1, 0, 0],
                            [0, 1, 0],
@@ -97,7 +97,7 @@ class controller():
 
 
 # long
-v_fps = 30
+v_fps = 20
 rho_slugft3 = 0.00238
 qBar_psf = 0.5*rho_slugft3*v_fps**2
 

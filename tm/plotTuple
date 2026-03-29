@@ -12,17 +12,17 @@ def first_ge_index(t, threshold):
 # -----------------------------
 # User settings
 # -----------------------------
-filename = "tm/data/telemetry_log_raw_20260315_140107.txt"   # your file
-filename = "tm/data/telemetry_log_raw_20260315_182429.txt"   # your file
+filename = "tm/data/telemetry_log_raw_20260328_170706.txt"   # your file
+
 # value_index = 2  # mode
-value_index = 5  # Nz
+# value_index = 5  # Nz
 # value_index = 3  # Nx
-value_index = 7  # q
-value_index = 20  # de
+# value_index = 7  # q
+# value_index = 20  # de
 # value_index = 14  # nzC
 
-# # value_index = 4  # Nz
-# # value_index = 21  # de
+value_index = 4  # Nz
+# value_index = 19  # da
 # value_index = 12  # rollRateC
 # value_index = 6  # rollRate
 
@@ -55,8 +55,8 @@ with open(filename, "r") as f:
 # idx = first_ge_index(times, 33.73)
 # idxEnd = first_ge_index(times, 37.8)
 
-idx = 0  # first_ge_index(times, 43.6)
-idxEnd = -1  # first_ge_index(times, 46.6)
+idx = first_ge_index(times, 35.77)
+idxEnd = first_ge_index(times, 44.21)
 
 # -----------------------------
 # Plot
@@ -69,6 +69,29 @@ plt.title(f"Telemetry Plot: index {value_index} vs time")
 plt.grid(True)
 plt.tight_layout()
 plt.show()
+
+# -----------------------------
+# Compute delta time
+# -----------------------------
+dt = []
+for i in range(1, len(times)):
+    dt.append(times[i] - times[i-1])
+
+# Use midpoints for plotting (optional but cleaner)
+t_mid = times[1:]
+
+# -----------------------------
+# Plot
+# -----------------------------
+plt.figure(figsize=(10, 5))
+plt.plot(t_mid, dt, linewidth=1.5)
+plt.xlabel("Time (s)")
+plt.ylabel("Δt (s)")
+plt.title("Delta Time Between Samples")
+plt.grid(True)
+plt.tight_layout()
+plt.show()
+
 
 # times = []
 

@@ -48,18 +48,18 @@ public:
     struct aptParams
     {
         busAptGains gains = {
-            {0.0, 0.0, 0.0, 0.0, 0.0},  // roll, k_p, k_i, k_f, k_antiWindup
-            {0.0, 2, 0.5, 0.0, 0.0},    // rollRate, k_p, k_i, k_f, k_antiWindup
-            {0.0, 0.0, 0.0, 0.0, 0.0},  // pitch, k_p, k_i, k_f, k_antiWindup
-            {0.0, 2, 0.5, 0.0, 0.0},    // pitchRate, k_p, k_i, k_f, k_antiWindup
-            {-2.0, 0.0, 0.0, 0.0, 0.0}, // nz, k_p, k_i, k_f
-            {0.0, 0.0, 0.0, 0.0, 0.0},  // heading,
-            {5, 0.0, 0.0, 0.0, 0.0},    // ny, k_p, k_i, k_f, k_antiWindup
-            {0.0, 2, 0.5, 0.0, 0.0}};   // yawRate, k_p, k_i, k_f, k_antiWindup
+            {0.0, 0.0, 0.0, 0.0, 0.0},   // roll, k_p, k_i, k_f, k_antiWindup
+            {0.0, 5, 0.5, 0.0, 0.0},     // rollRate, k_p, k_i, k_f, k_antiWindup
+            {0.0, 0.0, 0.0, 0.0, 0.0},   // pitch, k_p, k_i, k_f, k_antiWindup
+            {0.0, 5, 0.5, 0.0, 0.0},     // pitchRate, k_p, k_i, k_f, k_antiWindup
+            {-10.0, 0.0, 0.0, 0.0, 0.0}, // nz, k_p, k_i, k_f
+            {0.0, 0.0, 0.0, 0.0, 0.0},   // heading,
+            {10, 0.0, 0.0, 0.0, 0.0},    // ny, k_p, k_i, k_f, k_antiWindup
+            {0.0, 5, 0.5, 0.0, 0.0}};    // yawRate, k_p, k_i, k_f, k_antiWindup
         bool integratorOff_b = false;
         static const int nEffector = 4;
-        double effectorLimitHi[nEffector] = {15.0, 30.0, 30.0, 1.0};
-        double effectorLimitLo[nEffector] = {-15.0, -30.0, -30.0, 0.0};
+        double effectorLimitHi[nEffector] = {20.0, 25.0, 25.0, 1.0};
+        double effectorLimitLo[nEffector] = {-20.0, -25.0, -25.0, 0.0};
         double effectorOffset[nEffector] = {0.0, -5.0, 0.0, 0.0};
         int effectorPins[nEffector] = {7, 8, 9, 10};
         int muMax_us[nEffector] = {2000, 2000, 2000, 1900}; // microseconds
@@ -80,10 +80,10 @@ public:
         CMN::matrix servoMappingBreakpoints = {
             nEffector,
             nMappingBP,
-            {{-16, -12, -6, 0, 6, 12, 16},
-             {-23, -17, -9, 0, 10, 19, 28},
-             {-29, -20, -10, 0, 15, 29, 42},
-             {0.0, 0.25, 0.5, 0.75, 1.0}}};
+            {{-25.0, -17.0, -10.0, 0, 10.0, 17.0, 25.0},
+             {-31.0, -20.0, -9.0, 0, 7.0, 17.0, 23.0},
+             {-30.0, -22.0, -16.0, 0, 17.0, 32.0, 39.0},
+             {0.0, 0.1, 0.25, 0.5, 0.75, 0.9, 1.0}}};
         CMN::matrix servoMappingTable = {
             nEffector,
             nMappingBP,
