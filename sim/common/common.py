@@ -5,13 +5,15 @@ class common:
     def __init__(self):
         self.r2d = 180/np.pi  # radians to degrees conversion factor
         self.d2r = np.pi/180  # degrees to radians conversion factor
-        self.g_ftps2 = 32.174  # gravitational acceleration in ft/s^2
+        self.g_fps2 = 32.174  # gravitational acceleration in ft/s^2
         self.ft2in = 12  # foot to inch
         self.in2ft = 1/12  # inch to foot
         self.ft2m = 1/3.28084  # ft to meter
         self.m2ft = 3.28084  # meter to foot
         self.slug2kg = 14.593902937  # slug to kilogram
         self.kg2slug = 0.0685217659  # kilogram to slug
+        self.lbf2n = 4.44822  # pound force to newton
+        self.n2lbf = 1 / 4.44822  # newton to pound force
 
     def ecef2bodyTransformation(self, lla_ddft, euler_d):
         # Placeholder for ECEF to body frame conversion
@@ -58,6 +60,24 @@ class common:
         ])
 
         return ned2body  # Return the transformation matrix
+
+    def stab2bodyTransformation(self, alpha_d):
+        """Stability Axes to Body."""
+        ca = np.cos(alpha_d*self.d2r)
+        sa = np.sin(alpha_d*self.d2r)
+
+        stab2body = np.array([
+            [ca,  0.0, -sa],
+            [0.0,  1.0, 0.0],
+            [sa,  0.0,  ca]
+        ])
+
+        return stab2body
+
+    def body2stabTransformation(self, alpha_d):
+        """Body Axes to Stability."""
+        body2stab = np.transpose(self.stab2bodyTransformation(alpha_d))
+        return body2stab
 
     def euler_to_quaternion(self, euler_d):
         # Placeholder for Euler to quaternion conversion

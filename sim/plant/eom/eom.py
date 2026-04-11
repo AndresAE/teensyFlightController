@@ -52,7 +52,8 @@ class eom:
         self.lonEI_d = self.earth.wEI_E_rps[2] * self.dt_s
 
         # post-processing
-        B2E = self.quaternion_to_dcm(self.q)  # Update Euler angles (degrees)
+        # Update Euler angles (degrees)
+        B2E = self.cmn.quaternion_to_dcm(self.q)
         # Update LLA coordinates (degrees, degrees, feet)
         self.lla_ddft = self.earth.ecef_to_lla(self.xBE_E_ft)
         self.euler_d = self.cmn.dcm_to_euler(B2E.transpose(

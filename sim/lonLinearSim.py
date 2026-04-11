@@ -1,4 +1,4 @@
-from plant.aerodynamics.aeroModeling import aeroModeling
+from sim.plant.aerodynamics.aeroModelingTools import aeroModeling
 from plant.mass.massModeling import massModeling
 from plant.eom.eom import eom
 import matplotlib.pyplot as plt

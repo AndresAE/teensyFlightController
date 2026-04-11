@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from plant.eom.eom import eom
 from common.common import common
-from plant.aerodynamics.aeroModeling import aeroModeling
+from sim.plant.aerodynamics.aeroModelingTools import aeroModeling
 from plant.mass.massModeling import massModeling
 
 cmn = common()
@@ -80,7 +80,7 @@ mass_slug = 1.8/32.2
 theta_d = 0
 alpha_d = 0
 gamma_d = 0
-g_fps2 = cmn.g_ftps2
+g_fps2 = cmn.g_fps2
 
 xcg_ft = 11.25*cmn.in2ft
 zcg_ft = 2*cmn.in2ft

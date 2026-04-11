@@ -48,14 +48,14 @@ public:
     struct aptParams
     {
         busAptGains gains = {
-            {0.0, 0.0, 0.0, 0.0, 0.0},   // roll, k_p, k_i, k_f, k_antiWindup
-            {0.0, 5, 0.5, 0.0, 0.0},     // rollRate, k_p, k_i, k_f, k_antiWindup
-            {0.0, 0.0, 0.0, 0.0, 0.0},   // pitch, k_p, k_i, k_f, k_antiWindup
-            {0.0, 5, 0.5, 0.0, 0.0},     // pitchRate, k_p, k_i, k_f, k_antiWindup
-            {-10.0, 0.0, 0.0, 0.0, 0.0}, // nz, k_p, k_i, k_f
-            {0.0, 0.0, 0.0, 0.0, 0.0},   // heading,
-            {10, 0.0, 0.0, 0.0, 0.0},    // ny, k_p, k_i, k_f, k_antiWindup
-            {0.0, 5, 0.5, 0.0, 0.0}};    // yawRate, k_p, k_i, k_f, k_antiWindup
+            {0.0, 0.0, 0.0, 0.0, 0.0},  // roll, k_p, k_i, k_f, k_antiWindup
+            {0.0, 1.0, 2.0, 0.0, 0.0},  // rollRate, k_p, k_i, k_f, k_antiWindup
+            {0.0, 0.0, 0.0, 0.0, 0.0},  // pitch, k_p, k_i, k_f, k_antiWindup
+            {0.0, 1.0, 3.0, 0.0, 0.0},  // pitchRate, k_p, k_i, k_f, k_antiWindup
+            {-2.0, 0.0, 0.0, 0.0, 0.0}, // nz, k_p, k_i, k_f
+            {0.0, 0.0, 0.0, 0.0, 0.0},  // heading,
+            {5.0, 0.0, 0.0, 0.0, 0.0},  // ny, k_p, k_i, k_f, k_antiWindup
+            {0.0, 1.0, 3.0, 0.0, 0.0}}; // yawRate, k_p, k_i, k_f, k_antiWindup
         bool integratorOff_b = false;
         static const int nEffector = 4;
         double effectorLimitHi[nEffector] = {20.0, 25.0, 25.0, 1.0};

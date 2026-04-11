@@ -1,1 +1,2 @@
-from .aeroModeling import aeroModeling
+from .aeroModelingTools import aeroModeling
+from .aeroModel import aeroModel
