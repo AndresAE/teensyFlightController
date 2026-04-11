@@ -12,14 +12,14 @@ class fcs:
         self.nzC_B_fps2 = 0.0
         self.nyC_B_fps2 = 0.0
 
-        self.ki_p = 1.0
-        self.kd_p = 2.0
+        self.ki_p = 2.0
+        self.kd_p = 1.0
 
         self.kp_nz = -2.0
         self.ki_q = 1.0
         self.kd_q = -3.0
 
-        self.kp_ny = 5.0
+        self.kp_ny = 3.0
         self.ki_r = 1.0
         self.kd_r = 3.0
 

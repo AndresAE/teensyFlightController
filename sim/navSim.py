@@ -14,7 +14,7 @@ if __name__ == "__main__":
     # Initial LLA (San Francisco, 1000 ft altitude)
     sim.lla_ddft = np.array([0, 0, 0.0])
     # Initial velocity in body frame (ft/s)
-    sim.vBE_B_fps = np.array([40.0, 0.0, 5.0])
+    sim.vBE_B_fps = np.array([20.0, 0.0, 2.0])
     # Initial orientation (roll, pitch, yaw in degrees)
     sim.euler_d = np.array([0.0, 5.0, 0.0])
     sim.wBG_B_rps = -sim.earth.ned_angular_velocity(sim.lla_ddft, sim.vBE_B_fps, sim.cmn.ned2bodyTransformation(
@@ -71,10 +71,11 @@ if __name__ == "__main__":
 
         apt.nzC_B_fps2 = -32.174
         if t_s > 2:
-            apt.nyC_B_fps2 = 5.0
+            apt.pC_B_dps = 5.0
         else:
-            apt.nyC_B_fps2 = 0.0
-        apt.pC_B_dps = 0.0
+            apt.pC_B_dps = 0.0
+
+        apt.nyC_B_fps2 = 0.0
         apt.wBI_B_dps = sim.wBI_B_rps*sim.cmn.r2d
         apt.specificForce_fps2 = aeroMdl.f_B_lbf / sim.mass_slug
         apt.step()
@@ -134,9 +135,10 @@ if __name__ == "__main__":
     plt.title('alpha')
     plt.show()
 
-    # fig = plt.figure()
-    # plt.plot(t_sim_s, hae_ft)
-    # plt.show()
+    fig = plt.figure()
+    plt.plot(t_sim_s, hae_ft)
+    plt.title('hae')
+    plt.show()
 
     # fig = plt.figure()
     # plt.plot(t_sim_s, vel)

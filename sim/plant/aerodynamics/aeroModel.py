@@ -41,6 +41,9 @@ class aeroModel:
             self.coef[kk] = self.interp2(self.data["alphaBP_d"], self.data["betaBP_d"],
                                          self.data["baseline"][:, :, kk], self.alpha_d, self.beta_d)
 
+            if kk == 1:
+                self.coef[kk] += -0.05*self.beta_d
+
             # aileron
             self.coef[kk] += self.interp2(self.data["alphaBP_d"], self.data["aileronBP_d"],
                                           self.data["aileronInc"][:, :, kk], self.alpha_d, self.aileron_d)
